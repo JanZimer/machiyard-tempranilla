@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#090d16">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MachiYard">
+    <title>MachiYard Tempranilla - Gestión de Reto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        slate: {
+                            850: '#162032',
+                            900: '#0f172a',
+                            950: '#090d16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #090d16;
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: contain;
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] { -moz-appearance: textfield; }
+        .tab-panel { animation: fadeSlide 0.18s ease-out; }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-24 select-none">
+
+    <!-- Notificación Toast Flotante -->
+    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md pointer-events-none transition-all duration-300 opacity-0 -translate-y-4">
+        <div id="toast-inner" class="bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-2xl border border-emerald-400/30 flex items-center gap-3 text-sm font-semibold">
+            <span id="toast-icon" class="text-lg">✅</span>
+            <span id="toast-msg">Listo</span>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación Seguro -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+            <h3 id="confirm-title" class="text-lg font-extrabold text-white mb-2">¿Confirmar acción?</h3>
+            <p id="confirm-text" class="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">Esta acción modificará los datos guardados.</p>
+            <div class="flex gap-3">
+                <button id="confirm-cancel-btn" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm transition">Cancelar</button>
+                <button id="confirm-ok-btn" class="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm transition">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Historial / Detalle de Atleta -->
+    <div id="athlete-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-slate-900 border-t sm:border border-slate-700 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[88vh] flex flex-col shadow-2xl">
+            <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 id="modal-name" class="text-xl font-black text-white">ATLETA</h3>
+                    <p id="modal-sub" class="text-xs text-emerald-400 font-semibold mt-0.5">Nivel 1 • 0 km totales</p>
+                </div>
+                <button onclick="closeAthleteModal()" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-lg">✕</button>
+            </div>
+
+            <div class="px-5 py-3.5 bg-slate-850 border-b border-slate-800 flex items-center justify-between gap-3">
+                <div>
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-300 block">Nivel Inicial / Manual</span>
+                    <span class="text-[11px] text-slate-400">Escalón base del corredor (mín. 1)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="changeAthleteBaseLevel(-1)" class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 text-white font-black text-lg active:scale-95">-</button>
+                    <span id="modal-base-level" class="w-8 text-center font-black text-base text-emerald-400">1</span>
+                    <button onclick="changeAthleteBaseLevel(1)" class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 text-white font-black text-lg active:scale-95">+</button>
+                </div>
+            </div>
+
+            <div id="modal-workouts" class="p-4 overflow-y-auto flex-1 space-y-2"></div>
+
+            <div class="p-4 border-t border-slate-800 flex items-center justify-between bg-slate-950/60 rounded-b-3xl">
+                <button onclick="askDeleteAthlete()" class="text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-950/40 border border-rose-900/50 px-3 py-2 rounded-xl">
+                    🗑️ Eliminar corredor
+                </button>
+                <button onclick="closeAthleteModal()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CABECERA SUPERIOR FIJA -->
+    <header class="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-3">
+        <div class="max-w-2xl mx-auto flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-950/60 text-xl shrink-0">
+                    🏃‍♂️
+                </div>
+                <div class="min-w-0">
+                    <h1 class="font-black text-sm sm:text-base tracking-tight text-white truncate">
+                        MachiYard <span class="text-emerald-400">Tempranilla</span>
+                    </h1>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[11px] font-medium text-slate-400 truncate">Offline • 19 Corredores</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-xl p-1 shrink-0">
+                <button onclick="stepMonth(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-300 hover:bg-slate-800 active:scale-90 font-bold" title="Mes anterior">‹</button>
+                <span id="header-month-label" class="px-2 text-xs sm:text-sm font-extrabold text-emerald-300 min-w-[92px] text-center">Nov 2026</span>
+                <button onclick="stepMonth(1)" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-300 hover:bg-slate-800 active:scale-90 font-bold" title="Mes siguiente">›</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 w-full max-w-2xl mx-auto px-4 pt-4">
+
+        <!-- PESTAÑA 1: CLASIFICACIÓN -->
+        <section id="panel-ranking" class="tab-panel space-y-4">
+            <div class="bg-gradient-to-br from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/40 rounded-2xl p-4 shadow-lg">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <span class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded-md border border-amber-500/30">
+                            🏆 Líder del Reto (Ganador Provisional)
+                        </span>
+                        <h2 id="card-leader-name" class="text-lg sm:text-xl font-black text-white mt-1.5 truncate">VICKY</h2>
+                        <p id="card-leader-meta" class="text-xs text-slate-300 mt-0.5">Nivel 1 superado • 183 km</p>
+                    </div>
+                    <span class="text-3xl sm:text-4xl">👑</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                        <button id="filter-mode-month" onclick="setViewMode('month')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition">
+                            Mes Activo
+                        </button>
+                        <button id="filter-mode-all" onclick="setViewMode('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">
+                            Total Global
+                        </button>
+                    </div>
+                    <div class="text-xs text-slate-400 font-medium">
+                        Total grupo: <strong id="summary-group-km" class="text-emerald-400 font-extrabold">0 km</strong>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <input type="text" id="search-athlete" oninput="renderRanking()" placeholder="🔍 Buscar corredor por nombre..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-9 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+                    <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs font-bold px-1.5 py-0.5">✕</button>
+                </div>
+            </div>
+
+            <div id="ranking-container" class="space-y-2.5"></div>
+        </section>
+
+        <!-- PESTAÑA 2: + ENTRENO -->
+        <section id="panel-add" class="tab-panel hidden space-y-5">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-black text-white flex items-center gap-2">
+                        <span>⏱️</span> Añadir Entrenamiento
+                    </h2>
+                    <span class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">Mín. 5 km</span>
+                </div>
+
+                <form id="form-workout" onsubmit="submitWorkout(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">1. Corredor</label>
+                        <select id="select-athlete" required onchange="syncChipsHighlight()" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3.5 text-white font-bold text-sm sm:text-base focus:outline-none focus:border-emerald-500">
+                            <option value="">-- Selecciona un corredor --</option>
+                        </select>
+                        <div class="mt-2.5">
+                            <span class="text-[11px] text-slate-500 font-semibold block mb-1.5">Toque rápido:</span>
+                            <div id="athlete-chips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">2. Fecha</label>
+                            <input type="date" id="input-date" required class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3.5 text-white font-bold text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">3. Kilómetros</label>
+                            <div class="relative">
+                                <input type="number" id="input-km" step="0.01" min="0.1" placeholder="10.0" required oninput="checkKmRuleWarning()" class="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-4 pr-12 py-3.5 text-white font-black text-lg focus:outline-none focus:border-emerald-500">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">km</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-[11px] text-slate-500 font-semibold block mb-1.5">Sumar distancia rápida:</span>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button type="button" onclick="addQuickKm(5)" class="bg-slate-950 hover:bg-slate-800 active:scale-95 border border-slate-700/80 text-emerald-400 font-extrabold text-xs py-2.5 rounded-xl transition">+5 km</button>
+                            <button type="button" onclick="addQuickKm(10)" class="bg-slate-950 hover:bg-slate-800 active:scale-95 border border-slate-700/80 text-emerald-400 font-extrabold text-xs py-2.5 rounded-xl transition">+10 km</button>
+                            <button type="button" onclick="addQuickKm(15)" class="bg-slate-950 hover:bg-slate-800 active:scale-95 border border-slate-700/80 text-emerald-400 font-extrabold text-xs py-2.5 rounded-xl transition">+15 km</button>
+                            <button type="button" onclick="addQuickKm(21.1)" class="bg-slate-950 hover:bg-slate-800 active:scale-95 border border-slate-700/80 text-amber-400 font-extrabold text-xs py-2.5 rounded-xl transition">+21.1 km</button>
+                        </div>
+                    </div>
+
+                    <div id="km-warning-box" class="hidden bg-amber-500/15 border border-amber-500/40 rounded-2xl p-3 flex items-start gap-2.5">
+                        <span class="text-base">⚠️</span>
+                        <p class="text-xs text-amber-200 leading-relaxed">
+                            <strong>Aviso Reglamento:</strong> El mínimo oficial por actividad es de <strong>5 km</strong>. Puedes guardarlo igualmente si es una excepción válida.
+                        </p>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white font-black text-base py-4 rounded-2xl shadow-lg shadow-emerald-950/60 transition flex items-center justify-center gap-2">
+                        <span>💾</span> Guardar Entreno
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5">
+                <h3 class="text-sm font-extrabold text-white mb-3 flex items-center gap-2">
+                    <span>👤</span> Dar de alta nuevo corredor
+                </h3>
+                <form onsubmit="submitNewAthlete(event)" class="flex gap-2">
+                    <input type="text" id="new-athlete-input" placeholder="NOMBRE O ALIAS" required class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white font-semibold uppercase focus:outline-none focus:border-emerald-500">
+                    <button type="submit" class="bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-emerald-400 font-extrabold text-sm px-4 py-3 rounded-xl transition whitespace-nowrap">
+                        + Añadir
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-4">
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3 px-1">Últimos registros guardados</h3>
+                <div id="recent-workouts-container" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- PESTAÑA 3: WHATSAPP -->
+        <section id="panel-whatsapp" class="tab-panel hidden space-y-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-1.5">
+                    <h2 class="text-lg font-black text-white flex items-center gap-2">
+                        <span>💬</span> Parte para WhatsApp
+                    </h2>
+                    <button onclick="buildWhatsAppReport()" class="text-xs font-bold text-emerald-400 hover:underline">🔄 Regenerar</button>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">Listo para copiar y pegar directamente en el grupo del club.</p>
+
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <label class="inline-flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 cursor-pointer">
+                        <input type="checkbox" id="wa-opt-passed" checked onchange="buildWhatsAppReport()" class="accent-emerald-500">
+                        Destacar objetivo cumplido
+                    </label>
+                    <label class="inline-flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 cursor-pointer">
+                        <input type="checkbox" id="wa-opt-rules" checked onchange="buildWhatsAppReport()" class="accent-emerald-500">
+                        Recordatorio reglas
+                    </label>
+                </div>
+
+                <textarea id="wa-textarea" rows="15" class="w-full bg-slate-950 border border-slate-700 rounded-2xl p-3.5 text-xs sm:text-sm text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-emerald-500"></textarea>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                    <button id="btn-copy-wa" onclick="copyWhatsAppReport()" class="bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-black text-sm py-3.5 px-4 rounded-2xl shadow-lg shadow-emerald-950/50 transition flex items-center justify-center gap-2">
+                        <span>📋</span> <span id="btn-copy-wa-text">Copiar texto</span>
+                    </button>
+                    <button onclick="openInWhatsApp()" class="bg-[#25D366] hover:bg-[#20bd5a] active:scale-[0.98] text-slate-950 font-black text-sm py-3.5 px-4 rounded-2xl shadow-lg transition flex items-center justify-center gap-2">
+                        <span>📲</span> Enviar por WhatsApp
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PESTAÑA 4: DATOS -->
+        <section id="panel-data" class="tab-panel hidden space-y-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5">
+                <h2 class="text-base font-black text-white mb-1 flex items-center gap-2">
+                    <span>🪜</span> Escalera Progresiva (Cero Descensos)
+                </h2>
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+                    Si alcanzas el objetivo de tu nivel en el mes, subes +1 escalón. Si no llegas, mantienes tu nivel actual sin bajar.
+                </p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
+                        <span class="text-[11px] text-slate-400 block">Nivel 1 (Nov)</span>
+                        <strong class="text-sm text-emerald-400 font-black">150 km</strong>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
+                        <span class="text-[11px] text-slate-400 block">Nivel 2 (Dic)</span>
+                        <strong class="text-sm text-emerald-400 font-black">175 km</strong>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
+                        <span class="text-[11px] text-slate-400 block">Nivel 3 (Ene)</span>
+                        <strong class="text-sm text-emerald-400 font-black">200 km</strong>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
+                        <span class="text-[11px] text-slate-400 block">Nivel 4 (Feb)</span>
+                        <strong class="text-sm text-emerald-400 font-black">225 km</strong>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
+                        <span class="text-[11px] text-slate-400 block">Nivel 5 (Mar)</span>
+                        <strong class="text-sm text-emerald-400 font-black">250 km</strong>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
+                        <span class="text-[11px] text-slate-400 block">Nivel 6 (Abr)</span>
+                        <strong class="text-sm text-emerald-400 font-black">290 km</strong>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
+                        <span class="text-[11px] text-slate-400 block">Nivel 7 (May)</span>
+                        <strong class="text-sm text-emerald-400 font-black">340 km</strong>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
+                        <span class="text-[11px] text-slate-400 block">Nivel 8+ (Jun+)</span>
+                        <strong class="text-sm text-amber-400 font-black">400+ km</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-3">
+                <h2 class="text-base font-black text-white flex items-center gap-2">
+                    <span>💾</span> Exportar y Copias de Seguridad
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                    <button onclick="exportJSON()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs py-3.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 transition">
+                        <span>📤</span> Backup JSON
+                    </button>
+                    <label class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs py-3.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 cursor-pointer transition">
+                        <span>📥</span> Importar JSON
+                        <input type="file" accept=".json" onchange="importJSON(event)" class="hidden">
+                    </label>
+                    <button onclick="exportCSV()" class="bg-emerald-950/70 hover:bg-emerald-900/70 border border-emerald-700/60 text-emerald-300 font-bold text-xs py-3.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 transition">
+                        <span>📊</span> Excel (.CSV)
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/70 border border-slate-800 rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-sm font-extrabold text-white">Restaurar datos iniciales de Noviembre</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Vuelve a cargar los 19 atletas oficiales con sus kilómetros de noviembre de 2026.</p>
+                </div>
+                <button onclick="askRestoreInitialNov2026()" class="w-full sm:w-auto bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 font-bold text-xs py-3 px-4 rounded-xl whitespace-nowrap transition">
+                    🔄 Restaurar Noviembre (19)
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BARRA INFERIOR DE NAVEGACIÓN -->
+    <nav class="fixed bottom-0 inset-x-0 bg-slate-950/95 backdrop-blur-lg border-t border-slate-800/90 z-30">
+        <div class="max-w-2xl mx-auto grid grid-cols-4 h-16">
+            <button onclick="switchTab('ranking')" id="tab-btn-ranking" class="nav-tab flex flex-col items-center justify-center gap-1 text-emerald-400 transition">
+                <span class="text-xl leading-none">🏆</span>
+                <span class="text-[10px] font-extrabold tracking-wide">Clasificación</span>
+            </button>
+            <button onclick="switchTab('add')" id="tab-btn-add" class="nav-tab flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-200 transition">
+                <span class="text-xl leading-none">➕</span>
+                <span class="text-[10px] font-extrabold tracking-wide">+ Entreno</span>
+            </button>
+            <button onclick="switchTab('whatsapp')" id="tab-btn-whatsapp" class="nav-tab flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-200 transition">
+                <span class="text-xl leading-none">💬</span>
+                <span class="text-[10px] font-extrabold tracking-wide">WhatsApp</span>
+            </button>
+            <button onclick="switchTab('data')" id="tab-btn-data" class="nav-tab flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-200 transition">
+                <span class="text-xl leading-none">⚙️</span>
+                <span class="text-[10px] font-extrabold tracking-wide">Datos</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        const STORAGE_KEY = 'machiyard_v4_nov2026';
+
+        const LEVEL_GOALS = {
+            1: 150, 2: 175, 3: 200, 4: 225, 5: 250, 6: 290, 7: 340, 8: 400
+        };
+
+        function getGoalForLevel(lvl) {
+            if (LEVEL_GOALS[lvl]) return LEVEL_GOALS[lvl];
+            return 400 + (lvl - 8) * 50;
+        }
+
+        const SEED_NOV_2026 = [
+            { id: 'ath_01', name: 'VICKY', km: 183 },
+            { id: 'ath_02', name: 'MANUEL LINARES', km: 168 },
+            { id: 'ath_03', name: 'JUAN RAMON', km: 162 },
+            { id: 'ath_04', name: 'KAMACHO', km: 122 },
+            { id: 'ath_05', name: 'MOISES', km: 113 },
+            { id: 'ath_06', name: 'LUZMA D.', km: 105 },
+            { id: 'ath_07', name: 'JERO CUENCA', km: 95 },
+            { id: 'ath_08', name: 'JAVI MAURO', km: 92 },
+            { id: 'ath_09', name: 'MARI CARMEN S.', km: 87 },
+            { id: 'ath_10', name: 'CURRO MARTIN', km: 86 },
+            { id: 'ath_11', name: 'JUAN C. AMAYA', km: 80 },
+            { id: 'ath_12', name: 'FRAN RANCHAL', km: 73 },
+            { id: 'ath_13', name: 'LAURA', km: 73 },
+            { id: 'ath_14', name: 'JUANAN', km: 55 },
+            { id: 'ath_15', name: 'ANTONIO RAMILA', km: 49 },
+            { id: 'ath_16', name: 'MIGUEL AGUILERA', km: 48 },
+            { id: 'ath_17', name: 'VANESA', km: 39 },
+            { id: 'ath_18', name: 'PEDRO', km: 21 },
+            { id: 'ath_19', name: 'JUAN MALAGA', km: 21 }
+        ];
+
+        function buildInitialState() {
+            const athletes = SEED_NOV_2026.map(item => ({ id: item.id, name: item.name, baseLevel: 1 }));
+            const workouts = SEED_NOV_2026.map((item, index) => ({
+                id: `wrk_init_${String(index + 1).padStart(2, '0')}`,
+                athleteId: item.id,
+                date: '2026-11-17',
+                km: item.km,
+                note: 'Acumulado oficial Noviembre'
+            }));
+            return { athletes, workouts };
+        }
+
+        let state = { athletes: [], workouts: [] };
+        let selectedMonth = '2026-11';
+        let viewMode = 'month';
+        let modalAthleteId = null;
+
+        window.onload = function() {
+            initData();
+            setTodayInputDate();
+            renderAll();
+        };
+
+        function initData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && Array.isArray(parsed.athletes) && parsed.athletes.length > 0) {
+                        state = parsed;
+                        return;
+                    }
+                }
+            } catch (err) {}
+            state = buildInitialState();
+            persistData();
+        }
+
+        function persistData() {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (err) {}
+        }
+
+        function setTodayInputDate() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            document.getElementById('input-date').value = `${y}-${m}-${d}`;
+        }
+
+        function evaluateAthlete(athlete, activeYm) {
+            const myWorkouts = state.workouts.filter(w => w.athleteId === athlete.id);
+            const monthlyMap = {};
+            let totalGlobalKm = 0;
+
+            myWorkouts.forEach(w => {
+                const ym = w.date.substring(0, 7);
+                const val = parseFloat(w.km) || 0;
+                monthlyMap[ym] = (monthlyMap[ym] || 0) + val;
+                totalGlobalKm += val;
+            });
+
+            const timeline = Array.from(new Set([...Object.keys(monthlyMap), activeYm])).sort();
+            let currentLvl = athlete.baseLevel || 1;
+            let levelInSelectedMonth = currentLvl;
+            let goalInSelectedMonth = getGoalForLevel(currentLvl);
+            let kmInSelectedMonth = monthlyMap[activeYm] || 0;
+            let completedSelectedMonth = false;
+
+            for (const ym of timeline) {
+                if (ym > activeYm) break;
+                const goal = getGoalForLevel(currentLvl);
+                const km = monthlyMap[ym] || 0;
+                const completed = km >= goal;
+
+                if (ym === activeYm) {
+                    levelInSelectedMonth = currentLvl;
+                    goalInSelectedMonth = goal;
+                    kmInSelectedMonth = km;
+                    completedSelectedMonth = completed;
+                }
+                if (completed) currentLvl += 1;
+            }
+
+            return {
+                id: athlete.id,
+                name: athlete.name,
+                baseLevel: athlete.baseLevel || 1,
+                levelInMonth: levelInSelectedMonth,
+                nextOrCurrentLevel: currentLvl,
+                goalKm: goalInSelectedMonth,
+                monthKm: Number(kmInSelectedMonth.toFixed(2)),
+                totalKm: Number(totalGlobalKm.toFixed(2)),
+                completedMonth: completedSelectedMonth,
+                workouts: myWorkouts.sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id))
+            };
+        }
+
+        function computeStandings() {
+            const evaluated = state.athletes.map(a => evaluateAthlete(a, selectedMonth));
+            const primaryRanking = [...evaluated].sort((a, b) => {
+                if (viewMode === 'all') {
+                    if (b.totalKm !== a.totalKm) return b.totalKm - a.totalKm;
+                    return b.nextOrCurrentLevel - a.nextOrCurrentLevel;
+                }
+                if (b.nextOrCurrentLevel !== a.nextOrCurrentLevel) return b.nextOrCurrentLevel - a.nextOrCurrentLevel;
+                if (b.monthKm !== a.monthKm) return b.monthKm - a.monthKm;
+                return a.name.localeCompare(b.name);
+            });
+
+            const challengeRanking = [...evaluated].sort((a, b) => {
+                if (b.nextOrCurrentLevel !== a.nextOrCurrentLevel) return b.nextOrCurrentLevel - a.nextOrCurrentLevel;
+                return b.totalKm - a.totalKm;
+            });
+
+            return {
+                primaryRanking,
+                challengeWinner: challengeRanking.length > 0 ? challengeRanking[0] : null
+            };
+        }
+
+        function submitWorkout(e) {
+            e.preventDefault();
+            const athleteId = document.getElementById('select-athlete').value;
+            const date = document.getElementById('input-date').value;
+            const kmVal = parseFloat(document.getElementById('input-km').value);
+
+            if (!athleteId || !date || isNaN(kmVal) || kmVal <= 0) return;
+
+            state.workouts.push({
+                id: 'wrk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                athleteId,
+                date,
+                km: Number(kmVal.toFixed(2))
+            });
+
+            persistData();
+            selectedMonth = date.substring(0, 7);
+            document.getElementById('input-km').value = '';
+            document.getElementById('km-warning-box').classList.add('hidden');
+            renderAll();
+            showToast('Entrenamiento guardado', '✅');
+        }
+
+        function submitNewAthlete(e) {
+            e.preventDefault();
+            const input = document.getElementById('new-athlete-input');
+            const cleanName = input.value.trim().toUpperCase();
+            if (!cleanName) return;
+
+            if (state.athletes.some(a => a.name.toUpperCase() === cleanName)) return;
+
+            state.athletes.push({ id: 'ath_' + Date.now(), name: cleanName, baseLevel: 1 });
+            persistData();
+            input.value = '';
+            renderAll();
+            showToast(`Corredor ${cleanName} añadido`, '🏃‍♂️');
+        }
+
+        function deleteWorkoutById(workoutId) {
+            state.workouts = state.workouts.filter(w => w.id !== workoutId);
+            persistData();
+            renderAll();
+            if (modalAthleteId) openAthleteModal(modalAthleteId);
+            showToast('Entrenamiento eliminado', '🗑️');
+        }
+
+        function addQuickKm(amount) {
+            const input = document.getElementById('input-km');
+            input.value = Number(((parseFloat(input.value) || 0) + amount).toFixed(2));
+            checkKmRuleWarning();
+        }
+
+        function checkKmRuleWarning() {
+            const val = parseFloat(document.getElementById('input-km').value);
+            document.getElementById('km-warning-box').classList.toggle('hidden', !(val > 0 && val < 5));
+        }
+
+        function selectAthleteChip(id) {
+            document.getElementById('select-athlete').value = id;
+            syncChipsHighlight();
+            document.getElementById('input-km').focus();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`panel-${tabId}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-tab').forEach(b => {
+                b.classList.remove('text-emerald-400');
+                b.classList.add('text-slate-400');
+            });
+            const active = document.getElementById(`tab-btn-${tabId}`);
+            active.classList.remove('text-slate-400');
+            active.classList.add('text-emerald-400');
+            if (tabId === 'whatsapp') buildWhatsAppReport();
+        }
+
+        function stepMonth(delta) {
+            const [y, m] = selectedMonth.split('-').map(Number);
+            const d = new Date(y, m - 1 + delta, 1);
+            selectedMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            renderAll();
+        }
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.getElementById('filter-mode-month').className = mode === 'month' ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition' : 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition';
+            document.getElementById('filter-mode-all').className = mode === 'all' ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition' : 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition';
+            renderRanking();
+        }
+
+        function clearSearch() {
+            document.getElementById('search-athlete').value = '';
+            renderRanking();
+        }
+
+        function formatShortMonth(ym) {
+            const [y, m] = ym.split('-').map(Number);
+            const names = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            return `${names[m - 1]} ${y}`;
+        }
+
+        function formatLongMonth(ym) {
+            const [y, m] = ym.split('-').map(Number);
+            const names = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            return `${names[m - 1]} ${y}`;
+        }
+
+        function renderAll() {
+            document.getElementById('header-month-label').textContent = formatShortMonth(selectedMonth);
+            renderRanking();
+            renderAthleteControls();
+            renderRecentWorkouts();
+            if (!document.getElementById('panel-whatsapp').classList.contains('hidden')) buildWhatsAppReport();
+        }
+
+        function renderRanking() {
+            const { primaryRanking, challengeWinner } = computeStandings();
+            const searchQuery = document.getElementById('search-athlete').value.trim().toLowerCase();
+            document.getElementById('clear-search-btn').classList.toggle('hidden', searchQuery.length === 0);
+
+            if (challengeWinner) {
+                document.getElementById('card-leader-name').textContent = challengeWinner.name;
+                const lvlLabel = challengeWinner.completedMonth ? `Nivel ${challengeWinner.levelInMonth} superado` : `Nivel ${challengeWinner.nextOrCurrentLevel}`;
+                document.getElementById('card-leader-meta').textContent = `${lvlLabel} • ${challengeWinner.totalKm} km`;
+            }
+
+            const groupSum = primaryRanking.reduce((sum, a) => sum + (viewMode === 'all' ? a.totalKm : a.monthKm), 0);
+            document.getElementById('summary-group-km').textContent = `${groupSum.toFixed(1).replace(/\.0$/, '')} km`;
+
+            const filtered = primaryRanking.filter(a => a.name.toLowerCase().includes(searchQuery));
+            const container = document.getElementById('ranking-container');
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 bg-slate-900/50 border border-slate-800 rounded-2xl text-xs text-slate-400">No se encontraron corredores.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(athlete => {
+                const realPos = primaryRanking.findIndex(x => x.id === athlete.id) + 1;
+                const pct = Math.min(100, Math.round((athlete.monthKm / athlete.goalKm) * 100));
+                const isWinner = challengeWinner && challengeWinner.id === athlete.id;
+
+                const posStyle = realPos === 1 ? 'bg-amber-500 text-slate-950' : realPos === 2 ? 'bg-slate-300 text-slate-950' : realPos === 3 ? 'bg-amber-700 text-white' : 'bg-slate-800 text-slate-300';
+
+                return `
+                <div onclick="openAthleteModal('${athlete.id}')" class="bg-slate-900 hover:bg-slate-850 active:scale-[0.995] border ${athlete.completedMonth ? 'border-emerald-500/45' : 'border-slate-800'} rounded-2xl p-4 transition cursor-pointer shadow-sm">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-7 h-7 rounded-xl ${posStyle} font-black text-xs flex items-center justify-center shrink-0">${realPos}</span>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <h3 class="font-black text-white text-sm sm:text-base truncate">${escapeHtml(athlete.name)}</h3>
+                                    ${isWinner ? '<span class="text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full">👑 Líder Reto</span>' : ''}
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Total acumulado: <strong class="text-slate-200">${athlete.totalKm} km</strong></p>
+                            </div>
+                        </div>
+                        <span class="inline-block bg-slate-950 border ${athlete.completedMonth ? 'border-emerald-500/50 text-emerald-300' : 'border-slate-700 text-slate-200'} px-2.5 py-1 rounded-xl text-xs font-black">
+                            Nivel ${athlete.levelInMonth}
+                        </span>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex items-center justify-between text-[11px] sm:text-xs mb-1.5 gap-2">
+                            <div>${athlete.completedMonth ? '<span class="text-emerald-400 font-extrabold">✅ OBJETIVO CUMPLIDO</span>' : `<span class="text-slate-400">Faltan <strong class="text-slate-200">${Math.max(0, athlete.goalKm - athlete.monthKm).toFixed(1).replace(/\.0$/, '')} km</strong></span>`}</div>
+                            <span class="font-extrabold text-white shrink-0">${athlete.monthKm} / ${athlete.goalKm} km</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                            <div class="h-full ${athlete.completedMonth ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-emerald-600'} rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderAthleteControls() {
+            const select = document.getElementById('select-athlete');
+            const prev = select.value;
+            const sorted = [...state.athletes].sort((a, b) => a.name.localeCompare(b.name));
+            select.innerHTML = `<option value="">-- Selecciona un corredor (${sorted.length}) --</option>` +
+                sorted.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+            if (prev && sorted.some(a => a.id === prev)) select.value = prev;
+            syncChipsHighlight();
+        }
+
+        function syncChipsHighlight() {
+            const container = document.getElementById('athlete-chips');
+            const selectedId = document.getElementById('select-athlete').value;
+            container.innerHTML = [...state.athletes].sort((a, b) => a.name.localeCompare(b.name)).map(a => {
+                const active = a.id === selectedId;
+                return `<button type="button" onclick="selectAthleteChip('${a.id}')" class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition ${active ? 'bg-emerald-600 border-emerald-400 text-white' : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600'}">${escapeHtml(a.name)}</button>`;
+            }).join('');
+        }
+
+        function renderRecentWorkouts() {
+            const container = document.getElementById('recent-workouts-container');
+            const list = [...state.workouts].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)).slice(0, 8);
+            if (list.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-3">Sin registros todavía.</p>`;
+                return;
+            }
+            container.innerHTML = list.map(w => {
+                const ath = state.athletes.find(a => a.id === w.athleteId);
+                return `
+                <div class="flex items-center justify-between bg-slate-950 border border-slate-800/80 px-3.5 py-2.5 rounded-xl text-xs">
+                    <div class="min-w-0 pr-2">
+                        <strong class="text-white font-extrabold truncate">${escapeHtml(ath ? ath.name : '')}</strong>
+                        <span class="text-slate-400 ml-2">${w.date}</span>
+                    </div>
+                    <div class="flex items-center gap-3 shrink-0">
+                        <span class="font-black text-emerald-400 text-sm">${w.km} km</span>
+                        <button onclick="deleteWorkoutById('${w.id}')" class="text-slate-500 hover:text-rose-400 p-1 font-bold">✕</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openAthleteModal(id) {
+            const athlete = state.athletes.find(a => a.id === id);
+            if (!athlete) return;
+            modalAthleteId = id;
+            const info = evaluateAthlete(athlete, selectedMonth);
+            document.getElementById('modal-name').textContent = athlete.name;
+            document.getElementById('modal-sub').textContent = `Nivel actual: ${info.nextOrCurrentLevel} • Total: ${info.totalKm} km`;
+            document.getElementById('modal-base-level').textContent = info.baseLevel;
+            document.getElementById('modal-workouts').innerHTML = info.workouts.length === 0 ? `<p class="text-xs text-slate-400 text-center py-6">Sin entrenos.</p>` : info.workouts.map(w => `
+                <div class="flex items-center justify-between bg-slate-950 border border-slate-800 px-3.5 py-2.5 rounded-xl">
+                    <span class="text-xs font-bold text-slate-200">${w.date}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-sm text-emerald-400">${w.km} km</span>
+                        <button onclick="deleteWorkoutById('${w.id}')" class="w-8 h-8 rounded-lg bg-rose-950/50 text-rose-400 flex items-center justify-center text-xs font-bold">🗑️</button>
+                    </div>
+                </div>`).join('');
+            document.getElementById('athlete-modal').classList.remove('hidden');
+            document.getElementById('athlete-modal').classList.add('flex');
+        }
+
+        function closeAthleteModal() {
+            modalAthleteId = null;
+            document.getElementById('athlete-modal').classList.add('hidden');
+            document.getElementById('athlete-modal').classList.remove('flex');
+        }
+
+        function changeAthleteBaseLevel(delta) {
+            if (!modalAthleteId) return;
+            const athlete = state.athletes.find(a => a.id === modalAthleteId);
+            if (!athlete) return;
+            athlete.baseLevel = Math.max(1, (athlete.baseLevel || 1) + delta);
+            persistData();
+            renderAll();
+            openAthleteModal(modalAthleteId);
+        }
+
+        function buildWhatsAppReport() {
+            const { primaryRanking, challengeWinner } = computeStandings();
+            const showPassedSection = document.getElementById('wa-opt-passed').checked;
+            const showRules = document.getElementById('wa-opt-rules').checked;
+            const monthTitle = formatLongMonth(selectedMonth).toUpperCase();
+
+            let msg = `🏃‍♂️ *MACHIYARD TEMPRANILLA* 🏃‍♀️\n📅 *CLASIFICACIÓN - ${monthTitle}*\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+            if (challengeWinner) msg += `🏆 *LÍDER DEL RETO:* ${challengeWinner.name} (Nivel ${challengeWinner.nextOrCurrentLevel})\n\n`;
+
+            const completedList = primaryRanking.filter(a => a.completedMonth);
+            if (showPassedSection && completedList.length > 0) {
+                msg += `✅ *OBJETIVO CUMPLIDO (SUBEN DE NIVEL)*\n`;
+                completedList.forEach(a => { msg += `🚀 *${a.name}* (${a.monthKm} km) → Sube a *Nivel ${a.nextOrCurrentLevel}*\n`; });
+                msg += `\n`;
+            }
+
+            msg += `📊 *TABLA GENERAL (${primaryRanking.length} CORREDORES)*\n`;
+            primaryRanking.forEach((a, idx) => {
+                const pos = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+                const icon = a.completedMonth ? '✅' : '⏳';
+                msg += `${pos} *${a.name}* — *${a.monthKm}/${a.goalKm} km* ${icon} _(Global: ${a.totalKm} km)_\n`;
+            });
+
+            if (showRules) msg += `\n📌 _Reglas: Mín. 5 km/salida con GPS. Quien cumple objetivo sube de nivel; quien no llega mantiene nivel sin descensos._`;
+            document.getElementById('wa-textarea').value = msg;
+        }
+
+        function copyWhatsAppReport() {
+            const txt = document.getElementById('wa-textarea');
+            txt.select();
+            document.execCommand('copy');
+            showToast('Parte copiado al portapapeles', '📋');
+        }
+
+        function openInWhatsApp() {
+            const txt = encodeURIComponent(document.getElementById('wa-textarea').value);
+            window.open(`https://api.whatsapp.com/send?text=${txt}`, '_blank');
+        }
+
+        function showToast(msg, icon = '✅', isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            document.getElementById('toast-icon').textContent = icon;
+            toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md pointer-events-none transition-all duration-300 opacity-100 translate-y-0';
+            setTimeout(() => {
+                toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md pointer-events-none transition-all duration-300 opacity-0 -translate-y-4';
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
