@@ -270,10 +270,6 @@
                         <input type="checkbox" id="wa-opt-passed" checked onchange="buildWhatsAppReport()" class="accent-emerald-500">
                         Destacar objetivo cumplido
                     </label>
-                    <label class="inline-flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 cursor-pointer">
-                        <input type="checkbox" id="wa-opt-rules" checked onchange="buildWhatsAppReport()" class="accent-emerald-500">
-                        Recordatorio reglas
-                    </label>
                 </div>
 
                 <textarea id="wa-textarea" rows="15" class="w-full bg-slate-950 border border-slate-700 rounded-2xl p-3.5 text-xs sm:text-sm text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-emerald-500"></textarea>
@@ -798,7 +794,6 @@
         function buildWhatsAppReport() {
             const { primaryRanking, challengeWinner } = computeStandings();
             const showPassedSection = document.getElementById('wa-opt-passed').checked;
-            const showRules = document.getElementById('wa-opt-rules').checked;
             const monthTitle = formatLongMonth(selectedMonth).toUpperCase();
 
             let msg = `🏃‍♂️ *MACHIYARD TEMPRANILLA* 🏃‍♀️\n📅 *CLASIFICACIÓN - ${monthTitle}*\n━━━━━━━━━━━━━━━━━━━━\n\n`;
@@ -818,7 +813,6 @@
                 msg += `${pos} *${a.name}* — *${a.monthKm}/${a.goalKm} km* ${icon} _(Global: ${a.totalKm} km)_\n`;
             });
 
-            if (showRules) msg += `\n📌 _Reglas: Mín. 5 km/salida con GPS. Quien cumple objetivo sube de nivel; quien no llega mantiene nivel sin descensos._`;
             document.getElementById('wa-textarea').value = msg;
         }
 
