@@ -51,7 +51,7 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col pb-24 select-none">
+<body class="min-h-screen flex flex-col pb-28 select-none">
 
     <!-- Notificación Toast Flotante -->
     <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md pointer-events-none transition-all duration-300 opacity-0 -translate-y-4">
@@ -136,7 +136,7 @@
     </header>
 
     <!-- CONTENIDO PRINCIPAL -->
-    <main class="flex-1 w-full max-w-2xl mx-auto px-4 pt-4">
+    <main class="flex-1 w-full max-w-2xl mx-auto px-4 pt-4 pb-12">
 
         <!-- PESTAÑA 1: CLASIFICACIÓN -->
         <section id="panel-ranking" class="tab-panel space-y-4">
@@ -362,9 +362,9 @@
 
     </main>
 
-    <!-- BARRA INFERIOR DE NAVEGACIÓN -->
-    <nav class="fixed bottom-0 inset-x-0 bg-slate-950/95 backdrop-blur-lg border-t border-slate-800/90 z-30">
-        <div class="max-w-2xl mx-auto grid grid-cols-4 h-16">
+    <!-- BARRA INFERIOR DE NAVEGACIÓN FLOTANTE (LIBRE DEL LOGO DE NETLIFY) -->
+    <nav class="fixed bottom-3 inset-x-3 max-w-2xl mx-auto bg-slate-950/95 backdrop-blur-lg border border-slate-800/90 rounded-2xl shadow-2xl z-30">
+        <div class="grid grid-cols-4 h-16">
             <button onclick="switchTab('ranking')" id="tab-btn-ranking" class="nav-tab flex flex-col items-center justify-center gap-1 text-emerald-400 transition">
                 <span class="text-xl leading-none">🏆</span>
                 <span class="text-[10px] font-extrabold tracking-wide">Clasificación</span>
