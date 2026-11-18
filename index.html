@@ -362,24 +362,24 @@
 
     </main>
 
-    <!-- BARRA INFERIOR DE NAVEGACIÓN FLOTANTE (LIBRE DEL LOGO DE NETLIFY) -->
-    <nav class="fixed bottom-3 inset-x-3 max-w-2xl mx-auto bg-slate-950/95 backdrop-blur-lg border border-slate-800/90 rounded-2xl shadow-2xl z-30">
-        <div class="grid grid-cols-4 h-16">
-            <button onclick="switchTab('ranking')" id="tab-btn-ranking" class="nav-tab flex flex-col items-center justify-center gap-1 text-emerald-400 transition">
-                <span class="text-xl leading-none">🏆</span>
-                <span class="text-[10px] font-extrabold tracking-wide">Clasificación</span>
+    <!-- BARRA INFERIOR COMPACTA Y DESPLAZADA A LA IZQUIERDA -->
+    <nav class="fixed bottom-3 left-3 right-20 max-w-sm bg-slate-950/95 backdrop-blur-lg border border-slate-800/90 rounded-2xl shadow-2xl z-30">
+        <div class="grid grid-cols-4 h-15">
+            <button onclick="switchTab('ranking')" id="tab-btn-ranking" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-emerald-400 transition">
+                <span class="text-lg leading-none">🏆</span>
+                <span class="text-[9px] font-extrabold tracking-tight">Clasificación</span>
             </button>
-            <button onclick="switchTab('add')" id="tab-btn-add" class="nav-tab flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-200 transition">
-                <span class="text-xl leading-none">➕</span>
-                <span class="text-[10px] font-extrabold tracking-wide">+ Entreno</span>
+            <button onclick="switchTab('add')" id="tab-btn-add" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200 transition">
+                <span class="text-lg leading-none">➕</span>
+                <span class="text-[9px] font-extrabold tracking-tight">+ Entreno</span>
             </button>
-            <button onclick="switchTab('whatsapp')" id="tab-btn-whatsapp" class="nav-tab flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-200 transition">
-                <span class="text-xl leading-none">💬</span>
-                <span class="text-[10px] font-extrabold tracking-wide">WhatsApp</span>
+            <button onclick="switchTab('whatsapp')" id="tab-btn-whatsapp" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200 transition">
+                <span class="text-lg leading-none">💬</span>
+                <span class="text-[9px] font-extrabold tracking-tight">WhatsApp</span>
             </button>
-            <button onclick="switchTab('data')" id="tab-btn-data" class="nav-tab flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-200 transition">
-                <span class="text-xl leading-none">⚙️</span>
-                <span class="text-[10px] font-extrabold tracking-wide">Datos</span>
+            <button onclick="switchTab('data')" id="tab-btn-data" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200 transition">
+                <span class="text-lg leading-none">⚙️</span>
+                <span class="text-[9px] font-extrabold tracking-tight">Datos</span>
             </button>
         </div>
     </nav>
