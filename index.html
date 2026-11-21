@@ -62,10 +62,37 @@
       color: #bbf7d0;
       background: rgba(34, 197, 94, 0.14);
     }
+    .nav {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: fit-content;
+      max-width: calc(100% - 24px);
+      background: rgba(11, 18, 32, 0.96);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px;
+      display: flex;
+      gap: 6px;
+      z-index: 25;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+    }
+    .nav button {
+      background: transparent;
+      color: var(--muted);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+    }
+    .nav button.active {
+      background: var(--accent);
+      color: #052e16;
+    }
     main {
       max-width: 780px;
       margin: 0 auto;
-      padding: 14px;
+      padding: 12px 14px 18px;
     }
     .card {
       background: var(--card);
@@ -132,34 +159,9 @@
     }
     .muted { color: var(--muted); font-size: 0.85rem; }
     .hidden { display: none !important; }
-    .nav {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(11, 18, 32, 0.95);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 6px;
-      display: flex;
-      gap: 6px;
-      z-index: 30;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
-    }
-    .nav button {
-      background: transparent;
-      color: var(--muted);
-      padding: 7px 14px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-    }
-    .nav button.active {
-      background: var(--accent);
-      color: #052e16;
-    }
     .toast {
       position: fixed;
-      top: 72px;
+      top: 76px;
       left: 50%;
       transform: translateX(-50%);
       background: var(--card-2);
@@ -296,13 +298,13 @@
         </div>
       </div>
     </section>
-  </main>
 
-  <nav class="nav">
-    <button type="button" class="active" data-tab="ranking">Clasificación</button>
-    <button type="button" data-tab="workouts">Entrenos</button>
-    <button type="button" data-tab="data">Datos</button>
-  </nav>
+    <nav class="nav">
+      <button type="button" class="active" data-tab="ranking">Clasificación</button>
+      <button type="button" data-tab="workouts">Entrenos</button>
+      <button type="button" data-tab="data">Datos</button>
+    </nav>
+  </main>
 
   <script>
     const SUPABASE_URL = 'https://iduxcbrxkxzgnldnwiwz.supabase.co';
@@ -317,6 +319,18 @@
 
     const toastEl = document.getElementById('toast');
     const syncStatusEl = document.getElementById('syncStatus');
+
+    function getLevel(athlete) {
+      const raw = athlete?.base_level ?? athlete?.nivel_base ?? athlete?.level ?? 1;
+      const num = Number(raw);
+      return Number.isFinite(num) && num > 0 ? num : 1;
+    }
+
+    function getKm(workout) {
+      const raw = workout?.km ?? workout?.kilometros ?? workout?.distance ?? 0;
+      const num = Number(raw);
+      return Number.isFinite(num) ? num : 0;
+    }
 
     function showToast(msg, isError = false) {
       toastEl.textContent = msg;
@@ -400,22 +414,28 @@
       const totals = new Map();
       workouts.forEach((w) => {
         const prev = totals.get(w.athlete_id) || { totalAll: 0, totalFiltered: 0 };
-        prev.totalAll += Number(w.km) || 0;
+        prev.totalAll += getKm(w);
         totals.set(w.athlete_id, prev);
       });
       filteredWorkouts.forEach((w) => {
         const prev = totals.get(w.athlete_id) || { totalAll: 0, totalFiltered: 0 };
-        prev.totalFiltered += Number(w.km) || 0;
+        prev.totalFiltered += getKm(w);
         totals.set(w.athlete_id, prev);
       });
 
       const rows = athletes
         .map((a) => {
           const stats = totals.get(a.id) || { totalAll: 0, totalFiltered: 0 };
-          return { ...a, kmMes: stats.totalFiltered, kmTotal: stats.totalAll };
+          return {
+            ...a,
+            displayName: a.name || 'Corredor',
+            level: getLevel(a),
+            kmMes: stats.totalFiltered,
+            kmTotal: stats.totalAll
+          };
         })
-        .filter((a) => !query || a.name.toLowerCase().includes(query))
-        .sort((a, b) => b.kmMes - a.kmMes || a.name.localeCompare(b.name, 'es'));
+        .filter((a) => !query || a.displayName.toLowerCase().includes(query))
+        .sort((a, b) => b.kmMes - a.kmMes || a.displayName.localeCompare(b.displayName, 'es'));
 
       const listEl = document.getElementById('rankingList');
       if (!rows.length) {
@@ -426,8 +446,8 @@
             (r, idx) => `
           <div class="athlete-item">
             <div>
-              <strong>#${idx + 1} ${r.name}</strong>
-              <div class="muted">Nivel base ${r.base_level} · Acumulado: ${r.kmTotal.toFixed(1)} km</div>
+              <strong>#${idx + 1} ${r.displayName}</strong>
+              <div class="muted">Nivel base ${r.level} · Acumulado: ${r.kmTotal.toFixed(1)} km</div>
             </div>
             <div class="km-pill">${r.kmMes.toFixed(1)} km</div>
           </div>`
@@ -438,7 +458,7 @@
       const monthLabel = document.getElementById('monthFilter').value;
       const lines = [
         `🏃‍♂️ *MachiYard Tempranilla* (${monthLabel === 'ALL' ? 'Todos los meses' : monthLabel})`,
-        ...rows.map((r, i) => `${i + 1}. *${r.name}* — ${r.kmMes.toFixed(1)} km (Nv.${r.base_level})`)
+        ...rows.map((r, i) => `${i + 1}. *${r.displayName}* — ${r.kmMes.toFixed(1)} km (Nv.${r.level})`)
       ];
       document.getElementById('whatsappBox').value = lines.join('\n');
     }
@@ -446,10 +466,10 @@
     function renderWorkouts() {
       const athleteSelect = document.getElementById('workoutAthlete');
       athleteSelect.innerHTML = athletes
-        .map((a) => `<option value="${a.id}">${a.name}</option>`)
+        .map((a) => `<option value="${a.id}">${a.name || a.id}</option>`)
         .join('');
 
-      const nameById = Object.fromEntries(athletes.map((a) => [a.id, a.name]));
+      const nameById = Object.fromEntries(athletes.map((a) => [a.id, a.name || a.id]));
       const listEl = document.getElementById('workoutsList');
 
       if (!workouts.length) {
@@ -463,8 +483,8 @@
           (w) => `
         <div class="athlete-item">
           <div>
-            <strong>${nameById[w.athlete_id] || w.athlete_id}</strong> · <span class="km-pill">${Number(w.km).toFixed(1)} km</span>
-            <div class="muted">${w.date}${w.note ? ` · ${w.note}` : ''}</div>
+            <strong>${nameById[w.athlete_id] || w.athlete_id || 'Corredor'}</strong> · <span class="km-pill">${getKm(w).toFixed(1)} km</span>
+            <div class="muted">${w.date || ''}${w.note ? ` · ${w.note}` : ''}</div>
           </div>
           ${
             adminPin
@@ -487,11 +507,11 @@
           (a) => `
         <div class="athlete-item">
           <div>
-            <strong>${a.name}</strong>
+            <strong>${a.name || a.id}</strong>
           </div>
           <div class="row">
             <label class="muted">Nivel:</label>
-            <input type="number" min="1" value="${a.base_level}" style="width: 72px;" onchange="updateLevel('${a.id}', this.value)" />
+            <input type="number" min="1" value="${getLevel(a)}" style="width: 72px;" onchange="updateLevel('${a.id}', this.value)" />
             <button type="button" class="danger" onclick="deleteAthlete('${a.id}')">Eliminar</button>
           </div>
         </div>`
@@ -537,137 +557,3 @@
     window.updateLevel = async (id, levelVal) => {
       const level = Math.max(1, parseInt(levelVal, 10) || 1);
       const ok = await callAdminRpc('set_athlete_level_admin', {
-        p_athlete_id: id,
-        p_base_level: level
-      });
-      if (ok) showToast('Nivel actualizado');
-    };
-
-    document.getElementById('unlockAdminBtn').addEventListener('click', async () => {
-      const pin = document.getElementById('pinInput').value.trim();
-      if (!pin) return showToast('Escribe el PIN de administrador', true);
-      // Probamos el PIN llamando a la función seed con un id inexistente o verificando vía RPC
-      setAdminState(pin);
-      const { error } = await db.rpc('set_athlete_level_admin', {
-        p_pin: pin,
-        p_athlete_id: '__verify_pin__',
-        p_base_level: 1
-      });
-      if (error && error.message && error.message.toLowerCase().includes('pin')) {
-        setAdminState('');
-        showToast('PIN incorrecto', true);
-        return;
-      }
-      document.getElementById('pinInput').value = '';
-      showToast('Modo administrador activado');
-    });
-
-    document.getElementById('lockAdminBtn').addEventListener('click', () => {
-      setAdminState('');
-      showToast('Modo lectura activado');
-    });
-
-    document.getElementById('workoutForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const id = 'wrk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-      const ok = await callAdminRpc('add_workout_admin', {
-        p_id: id,
-        p_athlete_id: document.getElementById('workoutAthlete').value,
-        p_date: document.getElementById('workoutDate').value,
-        p_km: parseFloat(document.getElementById('workoutKm').value),
-        p_note: document.getElementById('workoutNote').value.trim() || null
-      });
-      if (ok) {
-        e.target.reset();
-        document.getElementById('workoutDate').value = new Date().toISOString().slice(0, 10);
-        showToast('Entrenamiento guardado en la nube');
-      }
-    });
-
-    document.getElementById('athleteForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const id = 'ath_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-      const ok = await callAdminRpc('add_athlete_admin', {
-        p_id: id,
-        p_name: document.getElementById('athleteName').value.trim(),
-        p_base_level: parseInt(document.getElementById('athleteLevel').value, 10) || 1
-      });
-      if (ok) {
-        e.target.reset();
-        document.getElementById('athleteLevel').value = 1;
-        showToast('Corredor añadido');
-      }
-    });
-
-    document.getElementById('seedBtn').addEventListener('click', async () => {
-      const ok = await callAdminRpc('seed_initial_nov2026_admin', {});
-      if (ok) showToast('Datos iniciales cargados');
-    });
-
-    document.getElementById('exportJsonBtn').addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify({ athletes, workouts }, null, 2)], {
-        type: 'application/json'
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `machiyard_backup_${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById('importJsonInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        const data = JSON.parse(await file.text());
-        for (const a of data.athletes || []) {
-          await callAdminRpc('add_athlete_admin', {
-            p_id: a.id,
-            p_name: a.name,
-            p_base_level: a.base_level || 1
-          });
-        }
-        for (const w of data.workouts || []) {
-          await callAdminRpc('add_workout_admin', {
-            p_id: w.id,
-            p_athlete_id: w.athlete_id,
-            p_date: w.date,
-            p_km: w.km,
-            p_note: w.note || null
-          });
-        }
-        showToast('JSON importado a Supabase');
-      } catch {
-        showToast('Archivo JSON no válido', true);
-      }
-      e.target.value = '';
-    });
-
-    document.getElementById('copyWhatsappBtn').addEventListener('click', async () => {
-      const txt = document.getElementById('whatsappBox').value;
-      await navigator.clipboard.writeText(txt);
-      showToast('Parte copiado para WhatsApp');
-    });
-
-    document.getElementById('monthFilter').addEventListener('change', renderRanking);
-    document.getElementById('searchInput').addEventListener('input', renderRanking);
-
-    document.querySelectorAll('.nav button').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.nav button').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        const target = btn.dataset.tab;
-        ['ranking', 'workouts', 'data'].forEach((t) => {
-          document.getElementById('tab-' + t).classList.toggle('hidden', t !== target);
-        });
-      });
-    });
-
-    document.getElementById('workoutDate').value = new Date().toISOString().slice(0, 10);
-    setAdminState(adminPin);
-    loadCloudData();
-    subscribeRealtime();
-  </script>
-</body>
-</html>
