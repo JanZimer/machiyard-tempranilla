@@ -2,691 +2,1271 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>MachiYard Tempranilla</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --card-2: #0b1220;
-      --text: #f8fafc;
+      --bg-app: #060d14;
+      --bg-card: #0d1722;
+      --bg-card-soft: #122030;
+      --bg-input: #09121b;
+      --border: rgba(148, 163, 184, 0.14);
+      --border-strong: rgba(148, 163, 184, 0.26);
+      --text: #f1f5f9;
       --muted: #94a3b8;
-      --accent: #22c55e;
-      --accent-dark: #16a34a;
+      --green: #10b981;
+      --green-bright: #22c55e;
+      --green-dark: #065f46;
+      --gold: #f59e0b;
+      --gold-soft: rgba(245, 158, 11, 0.14);
+      --blue: #38bdf8;
       --danger: #ef4444;
-      --warn: #f59e0b;
-      --border: #334155;
+      --nav-height: 70px;
+      --radius: 18px;
+      --radius-sm: 12px;
     }
-    * { box-sizing: border-box; }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
+      padding: 0 0 calc(var(--nav-height) + 28px) 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top, #0d1e2f 0%, var(--bg-app) 55%);
       color: var(--text);
-      padding-bottom: 84px;
+      min-height: 100vh;
     }
-    header {
-      background: var(--card-2);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 20;
+
+    .app-shell {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 14px 14px 0;
+    }
+
+    /* Header superior */
+    .topbar {
       display: flex;
+      align-items: center;
       justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .brand {
+      display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 0;
     }
-    h1 {
-      margin: 0;
-      font-size: 1.15rem;
-      line-height: 1.2;
+
+    .brand-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.28);
     }
-    .sub {
-      font-size: 0.78rem;
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-title span {
+      color: var(--green-bright);
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
       color: var(--muted);
       margin-top: 2px;
     }
-    .badge {
-      font-size: 0.75rem;
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--muted);
-      white-space: nowrap;
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green-bright);
+      flex-shrink: 0;
     }
-    .badge.admin {
-      border-color: var(--accent);
-      color: #bbf7d0;
-      background: rgba(34, 197, 94, 0.14);
+
+    .dot.offline {
+      background: var(--gold);
     }
-    .nav {
-      position: fixed;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: fit-content;
-      max-width: calc(100% - 24px);
-      background: rgba(11, 18, 32, 0.96);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 6px;
+
+    .month-picker {
       display: flex;
-      gap: 6px;
-      z-index: 25;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-    }
-    .nav button {
-      background: transparent;
-      color: var(--muted);
-      padding: 7px 14px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-    }
-    .nav button.active {
-      background: var(--accent);
-      color: #052e16;
-    }
-    main {
-      max-width: 780px;
-      margin: 0 auto;
-      padding: 12px 14px 18px;
-    }
-    .card {
-      background: var(--card);
+      align-items: center;
+      background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 14px;
+      padding: 4px;
+      flex-shrink: 0;
+    }
+
+    .month-btn {
+      width: 30px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .month-btn:active {
+      background: var(--bg-card-soft);
+    }
+
+    .month-label {
+      padding: 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Tarjetas generales */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
       margin-bottom: 12px;
     }
-    .row {
+
+    /* Líder del reto */
+    .leader-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.13), rgba(13, 23, 34, 0.96) 55%);
+      border: 1px solid rgba(245, 158, 11, 0.32);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .leader-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.14);
+      padding: 5px 10px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+
+    .leader-name {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      margin: 0 0 4px;
+    }
+
+    .leader-sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .crown-box {
+      font-size: 40px;
+      line-height: 1;
+      filter: drop-shadow(0 6px 14px rgba(245, 158, 11, 0.35));
+    }
+
+    /* Controles de vista y buscador */
+    .mode-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .segmented {
+      display: inline-flex;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3px;
+    }
+
+    .seg-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 13px;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
+    .seg-btn.active {
+      background: var(--green);
+      color: #04130c;
+    }
+
+    .group-total {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .group-total strong {
+      color: var(--green-bright);
+      font-size: 15px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--green);
+    }
+
+    /* Tarjetas de corredor */
+    .runner-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 15px 16px;
+      margin-bottom: 10px;
+    }
+
+    .runner-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .runner-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .pos-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--bg-card-soft);
+      border: 1px solid var(--border-strong);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .pos-1 { background: rgba(245, 158, 11, 0.22); border-color: #f59e0b; color: #fbbf24; }
+    .pos-2 { background: rgba(148, 163, 184, 0.22); border-color: #cbd5e1; color: #e2e8f0; }
+    .pos-3 { background: rgba(180, 83, 9, 0.25); border-color: #d97706; color: #fdba74; }
+
+    .runner-name-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .runner-name {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+
+    .mini-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--gold-soft);
+      color: #fbbf24;
+    }
+
+    .runner-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .level-pill {
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.32);
+      color: #6ee7b7;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+
+    .runner-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 12px;
+      margin-bottom: 7px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status-ok { color: var(--green-bright); }
+    .status-pending { color: var(--muted); }
+    .km-ratio { color: var(--text); font-weight: 800; }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(148, 163, 184, 0.14);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      transition: width 0.25s ease;
+    }
+
+    /* Formularios y botones rápidos */
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 6px;
+    }
+
+    .section-desc {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0 0 14px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .field-control {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 13px;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    .field-control:focus {
+      border-color: var(--green);
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .quick-btn {
+      background: var(--bg-card-soft);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 12px 6px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .quick-btn:active {
+      transform: scale(0.97);
+    }
+
+    .quick-btn.selected {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: var(--green-bright);
+      color: #6ee7b7;
+    }
+
+    .btn-primary {
+      width: 100%;
+      border: none;
+      border-radius: 13px;
+      padding: 13px 16px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #04130c;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      border: 1px solid var(--border-strong);
+      border-radius: 13px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--bg-card-soft);
+      color: var(--text);
+    }
+
+    .btn-whatsapp {
+      width: 100%;
+      border: none;
+      border-radius: 13px;
+      padding: 13px 16px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      background: #25d366;
+      color: #052010;
+      margin-top: 8px;
+    }
+
+    .check-row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .check-chip {
+      display: inline-flex;
       align-items: center;
-    }
-    input, select, textarea, button {
-      font: inherit;
-      border-radius: 10px;
+      gap: 7px;
+      background: var(--bg-card-soft);
       border: 1px solid var(--border);
-      padding: 9px 12px;
-      background: var(--card-2);
-      color: var(--text);
-    }
-    input, select, textarea {
-      width: 100%;
-    }
-    button {
-      cursor: pointer;
-      background: var(--accent);
-      color: #052e16;
-      border: none;
-      font-weight: 600;
-    }
-    button:hover { background: var(--accent-dark); }
-    button.secondary {
-      background: var(--card-2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    button.danger {
-      background: rgba(239, 68, 68, 0.16);
-      color: #fecaca;
-      border: 1px solid rgba(239, 68, 68, 0.45);
-    }
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 10px;
-    }
-    .athlete-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: var(--card-2);
-      border: 1px solid var(--border);
-      margin-bottom: 8px;
-    }
-    .km-pill {
+      border-radius: 11px;
+      padding: 8px 12px;
+      font-size: 13px;
       font-weight: 700;
-      color: #86efac;
-      white-space: nowrap;
+      cursor: pointer;
     }
-    .muted { color: var(--muted); font-size: 0.85rem; }
-    .hidden { display: none !important; }
+
+    .check-chip input {
+      accent-color: var(--green-bright);
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+
+    textarea.wa-preview {
+      width: 100%;
+      min-height: 250px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px;
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.45;
+      resize: vertical;
+      margin-bottom: 10px;
+    }
+
     .toast {
       position: fixed;
-      top: 76px;
+      bottom: calc(var(--nav-height) + 14px);
       left: 50%;
-      transform: translateX(-50%);
-      background: var(--card-2);
-      border: 1px solid var(--accent);
+      transform: translateX(-50%) translateY(20px);
+      background: #0f172a;
+      border: 1px solid var(--green-bright);
       color: var(--text);
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 0.88rem;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 60;
+      max-width: 92vw;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .workout-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .workout-item:last-child {
+      border-bottom: none;
+    }
+
+    .del-btn {
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.12);
+      color: #fca5a5;
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Barra inferior de 4 pestañas */
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--nav-height);
+      background: rgba(8, 15, 24, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       z-index: 50;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .nav-btn .nav-icon {
+      font-size: 19px;
+      line-height: 1;
+    }
+
+    .nav-btn.active {
+      color: var(--green-bright);
+    }
+
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1>MachiYard Tempranilla</h1>
-      <div class="sub" id="syncStatus">Conectando con Supabase...</div>
-    </div>
-    <div class="badge" id="adminBadge">Modo lectura</div>
-  </header>
+  <div class="app-shell">
+    <!-- Cabecera -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-badge">🏃</div>
+        <div>
+          <div class="brand-title">MachiYard <span>Tempranilla</span></div>
+          <div class="status-line">
+            <span id="statusDot" class="dot"></span>
+            <span id="statusText">Cargando...</span>
+          </div>
+        </div>
+      </div>
 
-  <div class="toast hidden" id="toast"></div>
+      <div class="month-picker">
+        <button id="prevMonthBtn" class="month-btn" type="button" aria-label="Mes anterior">‹</button>
+        <div id="monthLabel" class="month-label">Nov 2026</div>
+        <button id="nextMonthBtn" class="month-btn" type="button" aria-label="Mes siguiente">›</button>
+      </div>
+    </header>
 
-  <main>
-    <!-- PESTAÑA CLASIFICACIÓN -->
+    <!-- TAB 1: CLASIFICACIÓN -->
     <section id="tab-ranking">
-      <div class="card">
-        <div class="grid-2">
-          <div>
-            <label class="muted">Mes</label>
-            <select id="monthFilter"></select>
-          </div>
-          <div>
-            <label class="muted">Buscar corredor</label>
-            <input type="search" id="searchInput" placeholder="Nombre del corredor..." />
-          </div>
+      <div class="card leader-card">
+        <div>
+          <div class="leader-pill">🏆 Líder del Reto</div>
+          <h1 id="leaderName" class="leader-name">-</h1>
+          <div id="leaderSub" class="leader-sub">Calculando clasificación...</div>
         </div>
+        <div class="crown-box">👑</div>
       </div>
 
-      <div class="card" id="rankingList"></div>
-
       <div class="card">
-        <div class="row" style="justify-content: space-between; margin-bottom: 8px;">
-          <strong>Parte para WhatsApp</strong>
-          <button class="secondary" id="copyWhatsappBtn" type="button">Copiar parte</button>
+        <div class="mode-row">
+          <div class="segmented">
+            <button id="modeMonthBtn" class="seg-btn active" type="button">Mes Activo</button>
+            <button id="modeGlobalBtn" class="seg-btn" type="button">Total Global</button>
+          </div>
+          <div class="group-total">
+            Total grupo: <strong id="groupTotalKm">0 km</strong>
+          </div>
         </div>
-        <textarea id="whatsappBox" rows="7" readonly></textarea>
+        <input id="searchInput" class="search-input" type="search" placeholder="Buscar corredor por nombre..." />
+      </div>
+
+      <div id="rankingList"></div>
+    </section>
+
+    <!-- TAB 2: + ENTRENO -->
+    <section id="tab-workout" class="hidden">
+      <div id="pinGateWorkout" class="card">
+        <h2 class="section-title">Acceso de administración</h2>
+        <p class="section-desc">Introduce el PIN de administrador para registrar o borrar entrenamientos.</p>
+        <label class="field-label" for="pinInputWorkout">PIN (4 dígitos)</label>
+        <input id="pinInputWorkout" class="field-control" type="password" inputmode="numeric" maxlength="8" placeholder="••••" />
+        <button id="unlockWorkoutBtn" class="btn-primary" type="button">Desbloquear + Entreno</button>
+      </div>
+
+      <div id="workoutFormBox" class="card hidden">
+        <h2 class="section-title">Añadir entreno rápido</h2>
+        <p id="workoutTargetInfo" class="section-desc">Objetivo del mes seleccionado: 150 km</p>
+
+        <label class="field-label" for="runnerSelect">Corredor</label>
+        <select id="runnerSelect" class="field-control"></select>
+
+        <label class="field-label">Opciones rápidas de kilómetros</label>
+        <div class="quick-grid">
+          <button type="button" class="quick-btn" data-km="5">+5</button>
+          <button type="button" class="quick-btn" data-km="10">+10</button>
+          <button type="button" class="quick-btn" data-km="15">+15</button>
+          <button type="button" class="quick-btn" data-km="20">+20</button>
+        </div>
+
+        <label class="field-label" for="kmInput">Kilómetros (puedes escribir cualquier cantidad)</label>
+        <input id="kmInput" class="field-control" type="number" step="0.1" min="0.1" placeholder="Ej. 10 o 12.5" />
+
+        <label class="field-label" for="dateInput">Fecha</label>
+        <input id="dateInput" class="field-control" type="date" />
+
+        <label class="field-label" for="noteInput">Nota (opcional)</label>
+        <input id="noteInput" class="field-control" type="text" maxlength="120" placeholder="Ej. Tirada matinal, series..." />
+
+        <button id="saveWorkoutBtn" class="btn-primary" type="button">Guardar entrenamiento</button>
+      </div>
+
+      <div id="recentWorkoutsCard" class="card hidden">
+        <h3 class="section-title" style="font-size: 15px;">Entrenos del mes seleccionado</h3>
+        <div id="recentWorkoutsList"></div>
       </div>
     </section>
 
-    <!-- PESTAÑA ENTRENOS -->
-    <section id="tab-workouts" class="hidden">
-      <div class="card admin-only hidden">
-        <h3>Registrar entrenamiento</h3>
-        <form id="workoutForm">
-          <div class="grid-2">
-            <div>
-              <label class="muted">Corredor</label>
-              <select id="workoutAthlete" required></select>
-            </div>
-            <div>
-              <label class="muted">Fecha</label>
-              <input type="date" id="workoutDate" required />
-            </div>
-            <div>
-              <label class="muted">Kilómetros</label>
-              <input type="number" step="0.01" min="0.01" id="workoutKm" placeholder="Ej. 10.5" required />
-            </div>
-            <div>
-              <label class="muted">Nota (opcional)</label>
-              <input type="text" id="workoutNote" placeholder="Tirada, series..." />
-            </div>
-          </div>
-          <div class="row" style="margin-top: 10px;">
-            <button type="submit">Guardar entreno</button>
-          </div>
-        </form>
-      </div>
-
+    <!-- TAB 3: WHATSAPP -->
+    <section id="tab-whatsapp" class="hidden">
       <div class="card">
-        <h3>Últimos entrenamientos</h3>
-        <div id="workoutsList"></div>
-      </div>
-    </section>
-
-    <!-- PESTAÑA DATOS / ADMIN -->
-    <section id="tab-data" class="hidden">
-      <div class="card">
-        <h3>Acceso de administrador</h3>
-        <p class="muted" id="adminHelp">Introduce el PIN de administrador para añadir o editar datos en la nube.</p>
-        <div class="row" id="pinLoginRow">
-          <input type="password" id="pinInput" inputmode="numeric" placeholder="PIN de administrador" style="max-width: 220px;" />
-          <button type="button" id="unlockAdminBtn">Desbloquear</button>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">
+          <h2 class="section-title" style="margin:0;">💬 Parte para WhatsApp</h2>
+          <button id="regenWaBtn" class="seg-btn active" type="button">Regenerar</button>
         </div>
-        <div class="row hidden" id="adminActiveRow">
-          <button type="button" class="secondary" id="lockAdminBtn">Bloquear modo admin</button>
-        </div>
-      </div>
+        <p class="section-desc">Listo para copiar y pegar directamente en el grupo del club.</p>
 
-      <div class="card admin-only hidden">
-        <h3>Nuevo corredor</h3>
-        <form id="athleteForm">
-          <div class="grid-2">
-            <div>
-              <label class="muted">Nombre</label>
-              <input type="text" id="athleteName" placeholder="NOMBRE APELLIDO" required />
-            </div>
-            <div>
-              <label class="muted">Nivel base</label>
-              <input type="number" min="1" id="athleteLevel" value="1" required />
-            </div>
-          </div>
-          <div class="row" style="margin-top: 10px;">
-            <button type="submit">Añadir corredor</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="card admin-only hidden">
-        <h3>Corredores y nivel base</h3>
-        <div id="athletesManageList"></div>
-      </div>
-
-      <div class="card admin-only hidden">
-        <h3>Datos iniciales y copia JSON</h3>
-        <div class="row">
-          <button type="button" class="secondary" id="seedBtn">Cargar datos iniciales Nov 2026</button>
-          <button type="button" class="secondary" id="exportJsonBtn">Backup JSON</button>
-          <label class="secondary" style="padding: 9px 12px; border-radius: 10px; cursor: pointer;">
-            Importar JSON
-            <input type="file" id="importJsonInput" accept="application/json" class="hidden" />
+        <div class="check-row">
+          <label class="check-chip">
+            <input id="waHighlightGoal" type="checkbox" checked />
+            <span>Destacar objetivo cumplido</span>
+          </label>
+          <label class="check-chip">
+            <input id="waRulesReminder" type="checkbox" checked />
+            <span>Recordatorio reglas</span>
           </label>
         </div>
+
+        <textarea id="waText" class="wa-preview" readonly></textarea>
+
+        <button id="copyWaBtn" class="btn-primary" type="button">📋 Copiar texto</button>
+        <button id="sendWaBtn" class="btn-whatsapp" type="button">📲 Enviar por WhatsApp</button>
       </div>
     </section>
 
-    <nav class="nav">
-      <button type="button" class="active" data-tab="ranking">Clasificación</button>
-      <button type="button" data-tab="workouts">Entrenos</button>
-      <button type="button" data-tab="data">Datos</button>
-    </nav>
-  </main>
+    <!-- TAB 4: DATOS -->
+    <section id="tab-data" class="hidden">
+      <div id="pinGateData" class="card">
+        <h2 class="section-title">Gestión de datos</h2>
+        <p class="section-desc">Introduce el PIN de administrador para ver opciones de respaldo y conexión.</p>
+        <label class="field-label" for="pinInputData">PIN (4 dígitos)</label>
+        <input id="pinInputData" class="field-control" type="password" inputmode="numeric" maxlength="8" placeholder="••••" />
+        <button id="unlockDataBtn" class="btn-primary" type="button">Desbloquear Datos</button>
+      </div>
+
+      <div id="dataPanelBox" class="card hidden">
+        <h2 class="section-title">Estado de Supabase y copia JSON</h2>
+        <p class="section-desc" id="dataSummaryText">Proyecto: iduxcbrxkxzgnldnwiwz</p>
+        <button id="refreshNowBtn" class="btn-secondary" type="button" style="margin-bottom: 8px;">🔄 Forzar recarga desde Supabase</button>
+        <button id="exportJsonBtn" class="btn-primary" type="button">⬇️ Descargar copia JSON</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Barra de navegación inferior -->
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button class="nav-btn active" data-tab="ranking" type="button">
+      <span class="nav-icon">🏆</span>
+      <span>Clasificación</span>
+    </button>
+    <button class="nav-btn" data-tab="workout" type="button">
+      <span class="nav-icon">+</span>
+      <span>+ Entreno</span>
+    </button>
+    <button class="nav-btn" data-tab="whatsapp" type="button">
+      <span class="nav-icon">💬</span>
+      <span>WhatsApp</span>
+    </button>
+    <button class="nav-btn" data-tab="data" type="button">
+      <span class="nav-icon">⚙️</span>
+      <span>Datos</span>
+    </button>
+  </nav>
+
+  <div id="toast" class="toast"></div>
 
   <script>
-    const SUPABASE_URL = 'https://iduxcbrxkxzgnldnwiwz.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_zRpJbuDMLiEZTYI0k5Q3bw_6CBvqXt_';
+    const SUPABASE_URL = "https://iduxcbrxkxzgnldnwiwz.supabase.co";
+    // Pega aquí tu clave pública (anon / publishable) de Supabase si aún no está configurada
+    const SUPABASE_ANON_KEY = "";
+    const ADMIN_PIN = "2021";
 
-    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    // Regla del reto: Noviembre 2026 = 150 km; cada mes siguiente suma +25 km
+    const BASE_MONTH_INDEX = 2026 * 12 + (11 - 1); // Nov 2026
+    const BASE_GOAL_KM = 150;
+    const MONTHLY_STEP_KM = 25;
 
-    let athletes = [];
-    let workouts = [];
-    let adminPin = sessionStorage.getItem('machiyard_admin_pin') || '';
-    let realtimeChannel = null;
+    const MONTH_NAMES_ES = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    const MONTH_SHORT_ES = [
+      "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+      "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+    ];
 
-    const toastEl = document.getElementById('toast');
-    const syncStatusEl = document.getElementById('syncStatus');
+    const state = {
+      year: 2026,
+      month: 11, // 1..12
+      mode: "month", // "month" | "global"
+      search: "",
+      athletes: [],
+      workouts: [],
+      unlocked: false,
+      selectedQuickKm: null,
+      isOnline: false
+    };
 
-    function getLevel(athlete) {
-      const raw = athlete?.base_level ?? athlete?.nivel_base ?? athlete?.level ?? 1;
-      const num = Number(raw);
-      return Number.isFinite(num) && num > 0 ? num : 1;
+    const sbClient = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase)
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    function getGoalForYearMonth(year, month) {
+      const idx = year * 12 + (month - 1);
+      const diffMonths = idx - BASE_MONTH_INDEX;
+      return Math.max(BASE_GOAL_KM, BASE_GOAL_KM + diffMonths * MONTHLY_STEP_KM);
     }
 
-    function getKm(workout) {
-      const raw = workout?.km ?? workout?.kilometros ?? workout?.distance ?? 0;
-      const num = Number(raw);
-      return Number.isFinite(num) ? num : 0;
+    function getMonthPrefix(year = state.year, month = state.month) {
+      return `${year}-${String(month).padStart(2, "0")}`;
     }
 
-    function showToast(msg, isError = false) {
-      toastEl.textContent = msg;
-      toastEl.style.borderColor = isError ? 'var(--danger)' : 'var(--accent)';
-      toastEl.classList.remove('hidden');
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => toastEl.classList.add('hidden'), 3000);
+    function formatKm(val) {
+      const num = Number(val || 0);
+      return Number.isInteger(num) ? `${num} km` : `${num.toFixed(1)} km`;
     }
 
-    function setAdminState(pin) {
-      adminPin = pin || '';
-      if (adminPin) {
-        sessionStorage.setItem('machiyard_admin_pin', adminPin);
-      } else {
-        sessionStorage.removeItem('machiyard_admin_pin');
-      }
-      const isAdmin = Boolean(adminPin);
-      document.getElementById('adminBadge').textContent = isAdmin ? 'Modo admin' : 'Modo lectura';
-      document.getElementById('adminBadge').classList.toggle('admin', isAdmin);
-      document.getElementById('pinLoginRow').classList.toggle('hidden', isAdmin);
-      document.getElementById('adminActiveRow').classList.toggle('hidden', !isAdmin);
-      document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin));
-      renderAll();
+    function formatNum(val) {
+      const num = Number(val || 0);
+      return Number.isInteger(num) ? `${num}` : `${num.toFixed(1)}`;
     }
 
-    async function loadCloudData(silent = false) {
-      if (!silent) syncStatusEl.textContent = 'Sincronizando con Supabase...';
-      const [athRes, wrkRes] = await Promise.all([
-        db.from('athletes').select('*').order('name', { ascending: true }),
-        db.from('workouts').select('*').order('date', { ascending: false })
-      ]);
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => el.classList.remove("show"), 2400);
+    }
 
-      if (athRes.error || wrkRes.error) {
-        syncStatusEl.textContent = 'Error al conectar con Supabase';
-        if (!silent) showToast('No se pudieron cargar los datos de la nube', true);
+    function setStatus(online, text) {
+      state.isOnline = online;
+      const dot = document.getElementById("statusDot");
+      const label = document.getElementById("statusText");
+      dot.classList.toggle("offline", !online);
+      label.textContent = text;
+    }
+
+    async function loadData() {
+      setStatus(false, "Sincronizando...");
+      if (!sbClient) {
+        setStatus(false, "Falta clave Anon en index.html");
+        renderAll();
         return;
       }
 
-      athletes = athRes.data || [];
-      workouts = wrkRes.data || [];
-      syncStatusEl.textContent = `Sincronizado · ${new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
-      populateMonths();
+      try {
+        const [athRes, wrkRes] = await Promise.all([
+          sbClient.from("athletes").select("id, name").order("id", { ascending: true }),
+          sbClient.from("workouts").select("id, athlete_id, date, km, note").order("date", { ascending: false })
+        ]);
+
+        if (athRes.error) throw athRes.error;
+        if (wrkRes.error) throw wrkRes.error;
+
+        state.athletes = athRes.data || [];
+        state.workouts = wrkRes.data || [];
+        setStatus(true, `Conectado · ${state.athletes.length} corredores`);
+      } catch (err) {
+        console.error(err);
+        setStatus(false, "Error de conexión Supabase");
+        showToast("No se pudieron cargar los datos de Supabase");
+      }
+
       renderAll();
     }
 
-    function subscribeRealtime() {
-      if (realtimeChannel) {
-        db.removeChannel(realtimeChannel);
-      }
-      realtimeChannel = db
-        .channel('machiyard-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'athletes' }, () => loadCloudData(true))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'workouts' }, () => loadCloudData(true))
-        .subscribe();
-    }
+    function computeStandings() {
+      const prefix = getMonthPrefix();
+      const goal = getGoalForYearMonth(state.year, state.month);
 
-    function populateMonths() {
-      const select = document.getElementById('monthFilter');
-      const currentVal = select.value || '2026-11';
-      const months = new Set(['2026-11']);
-      workouts.forEach((w) => {
-        if (w.date && w.date.length >= 7) months.add(w.date.slice(0, 7));
-      });
-      const sorted = Array.from(months).sort().reverse();
-      select.innerHTML =
-        `<option value="ALL">Todos los meses</option>` +
-        sorted.map((m) => `<option value="${m}">${m}</option>`).join('');
-      select.value = Array.from(select.options).some((o) => o.value === currentVal) ? currentVal : 'ALL';
-    }
+      const rows = state.athletes.map((a) => {
+        const runnerWorkouts = state.workouts.filter((w) => w.athlete_id === a.id);
+        const monthKm = runnerWorkouts
+          .filter((w) => String(w.date || "").startsWith(prefix))
+          .reduce((acc, w) => acc + Number(w.km || 0), 0);
+        const globalKm = runnerWorkouts
+          .reduce((acc, w) => acc + Number(w.km || 0), 0);
 
-    function getFilteredWorkouts() {
-      const month = document.getElementById('monthFilter').value;
-      if (!month || month === 'ALL') return workouts;
-      return workouts.filter((w) => w.date && w.date.startsWith(month));
-    }
+        const activeKm = state.mode === "month" ? monthKm : globalKm;
+        const completed = monthKm >= goal;
+        const levelReached = completed ? 2 : 1;
 
-    function renderRanking() {
-      const query = document.getElementById('searchInput').value.trim().toLowerCase();
-      const filteredWorkouts = getFilteredWorkouts();
-
-      const totals = new Map();
-      workouts.forEach((w) => {
-        const prev = totals.get(w.athlete_id) || { totalAll: 0, totalFiltered: 0 };
-        prev.totalAll += getKm(w);
-        totals.set(w.athlete_id, prev);
-      });
-      filteredWorkouts.forEach((w) => {
-        const prev = totals.get(w.athlete_id) || { totalAll: 0, totalFiltered: 0 };
-        prev.totalFiltered += getKm(w);
-        totals.set(w.athlete_id, prev);
+        return {
+          id: a.id,
+          name: a.name,
+          monthKm,
+          globalKm,
+          activeKm,
+          goal,
+          completed,
+          levelReached
+        };
       });
 
-      const rows = athletes
-        .map((a) => {
-          const stats = totals.get(a.id) || { totalAll: 0, totalFiltered: 0 };
-          return {
-            ...a,
-            displayName: a.name || 'Corredor',
-            level: getLevel(a),
-            kmMes: stats.totalFiltered,
-            kmTotal: stats.totalAll
-          };
-        })
-        .filter((a) => !query || a.displayName.toLowerCase().includes(query))
-        .sort((a, b) => b.kmMes - a.kmMes || a.displayName.localeCompare(b.displayName, 'es'));
+      rows.sort((a, b) => b.activeKm - a.activeKm || a.name.localeCompare(b.name, "es"));
+      return rows;
+    }
 
-      const listEl = document.getElementById('rankingList');
-      if (!rows.length) {
-        listEl.innerHTML = '<p class="muted">No hay corredores que coincidan con el filtro.</p>';
+    function renderHeaderAndLeader(standings) {
+      document.getElementById("monthLabel").textContent =
+        `${MONTH_SHORT_ES[state.month - 1]} ${state.year}`;
+
+      const goal = getGoalForYearMonth(state.year, state.month);
+      document.getElementById("workoutTargetInfo").textContent =
+        `Mes activo: ${MONTH_NAMES_ES[state.month - 1]} ${state.year} · Objetivo del mes: ${goal} km`;
+
+      const leader = standings[0];
+      if (leader) {
+        document.getElementById("leaderName").textContent = leader.name;
+        const kmText = state.mode === "month" ? leader.monthKm : leader.globalKm;
+        document.getElementById("leaderSub").textContent =
+          `Nivel ${leader.levelReached} · ${formatKm(kmText)} (Objetivo mes: ${goal} km)`;
       } else {
-        listEl.innerHTML = rows
-          .map(
-            (r, idx) => `
-          <div class="athlete-item">
-            <div>
-              <strong>#${idx + 1} ${r.displayName}</strong>
-              <div class="muted">Nivel base ${r.level} · Acumulado: ${r.kmTotal.toFixed(1)} km</div>
+        document.getElementById("leaderName").textContent = "-";
+        document.getElementById("leaderSub").textContent = "Sin corredores cargados";
+      }
+
+      const groupTotal = standings.reduce((sum, r) => sum + r.activeKm, 0);
+      document.getElementById("groupTotalKm").textContent = formatKm(groupTotal);
+    }
+
+    function renderRanking(standings) {
+      const q = state.search.trim().toLowerCase();
+      const filtered = standings.filter((r) => !q || r.name.toLowerCase().includes(q));
+      const container = document.getElementById("rankingList");
+
+      if (!filtered.length) {
+        container.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);">No hay corredores que coincidan con la búsqueda.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map((r, idx) => {
+        const realPos = standings.findIndex((x) => x.id === r.id) + 1;
+        const pct = Math.min(100, Math.round((r.activeKm / Math.max(1, r.goal)) * 100));
+        const posClass = realPos === 1 ? "pos-1" : realPos === 2 ? "pos-2" : realPos === 3 ? "pos-3" : "";
+        const statusHtml = r.completed
+          ? `<span class="status-ok">✅ OBJETIVO CUMPLIDO</span>`
+          : `<span class="status-pending">En camino · Faltan ${formatNum(Math.max(0, r.goal - r.monthKm))} km</span>`;
+
+        return `
+          <div class="runner-card">
+            <div class="runner-top">
+              <div class="runner-left">
+                <div class="pos-badge ${posClass}">${realPos}</div>
+                <div>
+                  <div class="runner-name-row">
+                    <span class="runner-name">${r.name}</span>
+                    ${realPos === 1 ? `<span class="mini-tag">👑 Líder Reto</span>` : ""}
+                  </div>
+                  <div class="runner-sub">
+                    ${state.mode === "month"
+                      ? `Total acumulado mes: ${formatKm(r.monthKm)}`
+                      : `Total global: ${formatKm(r.globalKm)} · Mes: ${formatKm(r.monthKm)}`}
+                  </div>
+                </div>
+              </div>
+              <div class="level-pill">Nivel ${r.levelReached}</div>
             </div>
-            <div class="km-pill">${r.kmMes.toFixed(1)} km</div>
-          </div>`
-          )
-          .join('');
+
+            <div class="runner-status-row">
+              ${statusHtml}
+              <span class="km-ratio">${formatNum(r.activeKm)} / ${r.goal} km</span>
+            </div>
+
+            <div class="progress-track">
+              <div class="progress-fill" style="width: ${pct}%;"></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderRunnerSelectAndWorkouts() {
+      const sel = document.getElementById("runnerSelect");
+      const currentVal = sel.value;
+      sel.innerHTML = state.athletes
+        .map((a) => `<option value="${a.id}">${a.name}</option>`)
+        .join("");
+      if (currentVal && state.athletes.some((a) => a.id === currentVal)) {
+        sel.value = currentVal;
       }
 
-      const monthLabel = document.getElementById('monthFilter').value;
-      const lines = [
-        `🏃‍♂️ *MachiYard Tempranilla* (${monthLabel === 'ALL' ? 'Todos los meses' : monthLabel})`,
-        ...rows.map((r, i) => `${i + 1}. *${r.displayName}* — ${r.kmMes.toFixed(1)} km (Nv.${r.level})`)
+      const prefix = getMonthPrefix();
+      const nameById = Object.fromEntries(state.athletes.map((a) => [a.id, a.name]));
+      const monthWorkouts = state.workouts.filter((w) => String(w.date || "").startsWith(prefix));
+      const listEl = document.getElementById("recentWorkoutsList");
+
+      if (!monthWorkouts.length) {
+        listEl.innerHTML = `<div style="color:var(--muted);font-size:13px;">No hay entrenos registrados en este mes.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = monthWorkouts.slice(0, 25).map((w) => `
+        <div class="workout-item">
+          <div>
+            <strong>${nameById[w.athlete_id] || w.athlete_id}</strong> · <span style="color:var(--green-bright);font-weight:800;">+${formatKm(w.km)}</span>
+            <div style="color:var(--muted);font-size:11px;">${w.date || ""}${w.note ? " · " + w.note : ""}</div>
+          </div>
+          <button type="button" class="del-btn" data-del-id="${w.id}">Borrar</button>
+        </div>
+      `).join("");
+
+      listEl.querySelectorAll("[data-del-id]").forEach((btn) => {
+        btn.addEventListener("click", () => deleteWorkout(btn.dataset.delId));
+      });
+    }
+
+    function generateWhatsAppText(standings) {
+      const monthTitle = `${MONTH_NAMES_ES[state.month - 1].toUpperCase()} ${state.year}`;
+      const goal = getGoalForYearMonth(state.year, state.month);
+      const highlight = document.getElementById("waHighlightGoal").checked;
+      const reminder = document.getElementById("waRulesReminder").checked;
+      const leader = standings[0];
+      const completedList = standings.filter((r) => r.completed);
+
+      let lines = [
+        `🏃 *MACHIYARD TEMPRANILLA* 🏃`,
+        `📅 *CLASIFICACIÓN - ${monthTitle}* (Objetivo: *${goal} km*)`,
+        ""
       ];
-      document.getElementById('whatsappBox').value = lines.join('\n');
-    }
 
-    function renderWorkouts() {
-      const athleteSelect = document.getElementById('workoutAthlete');
-      athleteSelect.innerHTML = athletes
-        .map((a) => `<option value="${a.id}">${a.name || a.id}</option>`)
-        .join('');
-
-      const nameById = Object.fromEntries(athletes.map((a) => [a.id, a.name || a.id]));
-      const listEl = document.getElementById('workoutsList');
-
-      if (!workouts.length) {
-        listEl.innerHTML = '<p class="muted">Aún no hay entrenamientos registrados.</p>';
-        return;
+      if (leader) {
+        lines.push(`🏆 *LÍDER DEL RETO:* ${leader.name} (${formatKm(leader.monthKm)})`);
+        lines.push("");
       }
 
-      listEl.innerHTML = workouts
-        .slice(0, 50)
-        .map(
-          (w) => `
-        <div class="athlete-item">
-          <div>
-            <strong>${nameById[w.athlete_id] || w.athlete_id || 'Corredor'}</strong> · <span class="km-pill">${getKm(w).toFixed(1)} km</span>
-            <div class="muted">${w.date || ''}${w.note ? ` · ${w.note}` : ''}</div>
-          </div>
-          ${
-            adminPin
-              ? `<button type="button" class="danger" onclick="deleteWorkout('${w.id}')">Borrar</button>`
-              : ''
-          }
-        </div>`
-        )
-        .join('');
+      if (highlight && completedList.length) {
+        lines.push(`✅ *OBJETIVO CUMPLIDO (${goal} KM)*`);
+        completedList.forEach((r) => {
+          lines.push(`🚀 *${r.name}* (${formatNum(r.monthKm)} km)`);
+        });
+        lines.push("");
+      }
+
+      lines.push(`📊 *TABLA GENERAL (${standings.length} CORREDORES)*`);
+      standings.forEach((r, i) => {
+        const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
+        const check = r.completed ? " ✅" : "";
+        lines.push(`${medal} *${r.name}* — *${formatNum(r.monthKm)}/${goal} km*${check} _(Global: ${formatNum(r.globalKm)} km)_`);
+      });
+
+      if (reminder) {
+        lines.push("");
+        lines.push(`📌 *Regla del reto:* Objetivo base de 150 km en noviembre 2026 y +25 km cada mes siguiente.`);
+      }
+
+      return lines.join("\n");
     }
 
-    function renderAthletesManage() {
-      const container = document.getElementById('athletesManageList');
-      if (!athletes.length) {
-        container.innerHTML = '<p class="muted">Sin corredores.</p>';
-        return;
-      }
-      container.innerHTML = athletes
-        .map(
-          (a) => `
-        <div class="athlete-item">
-          <div>
-            <strong>${a.name || a.id}</strong>
-          </div>
-          <div class="row">
-            <label class="muted">Nivel:</label>
-            <input type="number" min="1" value="${getLevel(a)}" style="width: 72px;" onchange="updateLevel('${a.id}', this.value)" />
-            <button type="button" class="danger" onclick="deleteAthlete('${a.id}')">Eliminar</button>
-          </div>
-        </div>`
-        )
-        .join('');
+    function renderWhatsApp(standings) {
+      document.getElementById("waText").value = generateWhatsAppText(standings);
+    }
+
+    function renderPinSections() {
+      document.getElementById("pinGateWorkout").classList.toggle("hidden", state.unlocked);
+      document.getElementById("workoutFormBox").classList.toggle("hidden", !state.unlocked);
+      document.getElementById("recentWorkoutsCard").classList.toggle("hidden", !state.unlocked);
+
+      document.getElementById("pinGateData").classList.toggle("hidden", state.unlocked);
+      document.getElementById("dataPanelBox").classList.toggle("hidden", !state.unlocked);
+
+      document.getElementById("dataSummaryText").textContent =
+        `Proyecto: iduxcbrxkxzgnldnwiwz · ${state.athletes.length} corredores · ${state.workouts.length} entrenos totales`;
     }
 
     function renderAll() {
-      renderRanking();
-      renderWorkouts();
-      renderAthletesManage();
+      const standings = computeStandings();
+      renderHeaderAndLeader(standings);
+      renderRanking(standings);
+      renderRunnerSelectAndWorkouts();
+      renderWhatsApp(standings);
+      renderPinSections();
     }
 
-    async function callAdminRpc(fnName, params) {
-      if (!adminPin) {
-        showToast('Introduce primero el PIN de administrador', true);
-        return false;
-      }
-      const { error } = await db.rpc(fnName, { p_pin: adminPin, ...params });
-      if (error) {
-        if (error.message && error.message.toLowerCase().includes('pin')) {
-          setAdminState('');
-          showToast('PIN incorrecto. Se bloqueó el modo admin.', true);
-        } else {
-          showToast(error.message || 'Error al guardar en Supabase', true);
-        }
-        return false;
-      }
-      await loadCloudData(true);
-      return true;
-    }
-
-    window.deleteWorkout = async (id) => {
-      const ok = await callAdminRpc('delete_workout_admin', { p_workout_id: id });
-      if (ok) showToast('Entrenamiento eliminado');
-    };
-
-    window.deleteAthlete = async (id) => {
-      const ok = await callAdminRpc('delete_athlete_admin', { p_athlete_id: id });
-      if (ok) showToast('Corredor eliminado');
-    };
-
-    window.updateLevel = async (id, levelVal) => {
-      const level = Math.max(1, parseInt(levelVal, 10) || 1);
-      const ok = await callAdminRpc('set_athlete_level_admin', {
-        p_athlete_id: id,
-        p_base_level: level
-      });
-      if (ok) showToast('Nivel actualizado');
-    };
-
-    document.getElementById('unlockAdminBtn').addEventListener('click', async () => {
-      const pin = document.getElementById('pinInput').value.trim();
-      if (!pin) return showToast('Escribe el PIN de administrador', true);
-      setAdminState(pin);
-      const { error } = await db.rpc('set_athlete_level_admin', {
-        p_pin: pin,
-        p_athlete_id: '__verify_pin__',
-        p_base_level: 1
-      });
-      if (error && error.message && error.message.toLowerCase().includes('pin')) {
-        setAdminState('');
-        showToast('PIN incorrecto', true);
+    async function addWorkout() {
+      if (!state.unlocked) {
+        showToast("Desbloquea primero con el PIN 2021");
         return;
       }
-      document.getElementById('pinInput').value = '';
-      showToast('Modo administrador activado');
-    });
+      if (!sbClient) {
+        showToast("Configura SUPABASE_ANON_KEY en index.html");
+        return;
+      }
 
-    document.getElementById('lockAdminBtn').addEventListener('click', () => {
-      setAdminState('');
-      showToast('Modo lectura activado');
-    });
+      const athleteId = document.getElementById("runnerSelect").value;
+      const kmVal = parseFloat(document.getElementById("kmInput").value);
+      const dateVal = document.getElementById("dateInput").value;
+      const noteVal = document.getElementById("noteInput").value.trim() || "Entreno rápido";
 
-    document.getElementById('workoutForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const id = 'wrk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-      const ok = await callAdminRpc('add_workout_admin', {
-        p_id: id,
-        p_athlete_id: document.getElementById('workoutAthlete').value,
-        p_date: document.getElementById('workoutDate').value,
-        p_km: parseFloat(document.getElementById('workoutKm').value),
-        p_note: document.getElementById('workoutNote').value.trim() || null
+      if (!athleteId) {
+        showToast("Selecciona un corredor");
+        return;
+      }
+      if (!Number.isFinite(kmVal) || kmVal <= 0) {
+        showToast("Indica una distancia válida mayor que 0");
+        return;
+      }
+      if (!dateVal) {
+        showToast("Selecciona una fecha");
+        return;
+      }
+
+      const newId = `wrk_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const payload = {
+        id: newId,
+        athlete_id: athleteId,
+        date: dateVal,
+        km: Number(kmVal.toFixed(2)),
+        note: noteVal
+      };
+
+      const { error } = await sbClient.from("workouts").insert(payload);
+      if (error) {
+        console.error(error);
+        showToast("Error al guardar en Supabase");
+        return;
+      }
+
+      document.getElementById("kmInput").value = "";
+      document.getElementById("noteInput").value = "";
+      state.selectedQuickKm = null;
+      document.querySelectorAll(".quick-btn").forEach((b) => b.classList.remove("selected"));
+
+      showToast(`Añadidos +${payload.km} km`);
+      await loadData();
+    }
+
+    async function deleteWorkout(workoutId) {
+      if (!state.unlocked || !sbClient) return;
+      const { error } = await sbClient.from("workouts").delete().eq("id", workoutId);
+      if (error) {
+        console.error(error);
+        showToast("No se pudo borrar el entreno");
+        return;
+      }
+      showToast("Entreno eliminado");
+      await loadData();
+    }
+
+    function switchTab(tabName) {
+      const tabs = ["ranking", "workout", "whatsapp", "data"];
+      tabs.forEach((t) => {
+        document.getElementById(`tab-${t}`).classList.toggle("hidden", t !== tabName);
       });
-      if (ok) {
-        e.target.reset();
-        document.getElementById('workoutDate').value = new Date().toISOString().slice(0, 10);
-        showToast('Entrenamiento guardado en la nube');
+      document.querySelectorAll(".nav-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.tab === tabName);
+      });
+    }
+
+    function changeMonth(delta) {
+      const totalMonths = state.year * 12 + (state.month - 1) + delta;
+      state.year = Math.floor(totalMonths / 12);
+      state.month = (totalMonths % 12) + 1;
+      renderAll();
+    }
+
+    function handleUnlock(inputId) {
+      const val = document.getElementById(inputId).value.trim();
+      if (val === ADMIN_PIN) {
+        state.unlocked = true;
+        renderPinSections();
+        showToast("Acceso desbloqueado");
+      } else {
+        showToast("PIN incorrecto");
+      }
+    }
+
+    // Eventos UI
+    document.querySelectorAll(".nav-btn").forEach((btn) => {
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    });
+
+    document.getElementById("prevMonthBtn").addEventListener("click", () => changeMonth(-1));
+    document.getElementById("nextMonthBtn").addEventListener("click", () => changeMonth(1));
+
+    document.getElementById("modeMonthBtn").addEventListener("click", () => {
+      state.mode = "month";
+      document.getElementById("modeMonthBtn").classList.add("active");
+      document.getElementById("modeGlobalBtn").classList.remove("active");
+      renderAll();
+    });
+
+    document.getElementById("modeGlobalBtn").addEventListener("click", () => {
+      state.mode = "global";
+      document.getElementById("modeGlobalBtn").classList.add("active");
+      document.getElementById("modeMonthBtn").classList.remove("active");
+      renderAll();
+    });
+
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      state.search = e.target.value;
+      renderRanking(computeStandings());
+    });
+
+    document.getElementById("unlockWorkoutBtn").addEventListener("click", () => handleUnlock("pinInputWorkout"));
+    document.getElementById("unlockDataBtn").addEventListener("click", () => handleUnlock("pinInputData"));
+
+    document.querySelectorAll(".quick-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const km = Number(btn.dataset.km);
+        document.getElementById("kmInput").value = km;
+        state.selectedQuickKm = km;
+        document.querySelectorAll(".quick-btn").forEach((b) => b.classList.remove("selected"));
+        btn.classList.add("selected");
+      });
+    });
+
+    document.getElementById("kmInput").addEventListener("input", () => {
+      state.selectedQuickKm = null;
+      document.querySelectorAll(".quick-btn").forEach((b) => b.classList.remove("selected"));
+    });
+
+    document.getElementById("saveWorkoutBtn").addEventListener("click", addWorkout);
+
+    document.getElementById("regenWaBtn").addEventListener("click", () => {
+      renderWhatsApp(computeStandings());
+      showToast("Parte regenerado");
+    });
+
+    document.getElementById("waHighlightGoal").addEventListener("change", () => renderWhatsApp(computeStandings()));
+    document.getElementById("waRulesReminder").addEventListener("change", () => renderWhatsApp(computeStandings()));
+
+    document.getElementById("copyWaBtn").addEventListener("click", async () => {
+      const text = document.getElementById("waText").value;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("Texto copiado al portapapeles");
+      } catch {
+        const ta = document.getElementById("waText");
+        ta.select();
+        document.execCommand("copy");
+        showToast("Texto copiado");
       }
     });
 
-    document.getElementById('athleteForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const id = 'ath_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-      const ok = await callAdminRpc('add_athlete_admin', {
-        p_id: id,
-        p_name: document.getElementById('athleteName').value.trim(),
-        p_base_level: parseInt(document.getElementById('athleteLevel').value, 10) || 1
-      });
-      if (ok) {
-        e.target.reset();
-        document.getElementById('athleteLevel').value = 1;
-        showToast('Corredor añadido');
-      }
+    document.getElementById("sendWaBtn").addEventListener("click", () => {
+      const text = encodeURIComponent(document.getElementById("waText").value);
+      window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
     });
 
-    document.getElementById('seedBtn').addEventListener('click', async () => {
-      const ok = await callAdminRpc('seed_initial_nov2026_admin', {});
-      if (ok) showToast('Datos iniciales cargados');
-    });
+    document.getElementById("refreshNowBtn").addEventListener("click", loadData);
 
-    document.getElementById('exportJsonBtn').addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify({ athletes, workouts }, null, 2)], {
-        type: 'application/json'
-      });
+    document.getElementById("exportJsonBtn").addEventListener("click", () => {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        project: "iduxcbrxkxzgnldnwiwz",
+        athletes: state.athletes,
+        workouts: state.workouts
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `machiyard_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `machiyard-backup-${getMonthPrefix()}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      showToast("Copia JSON descargada");
     });
 
-    document.getElementById('importJsonInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        const data = JSON.parse(await file.text());
-        for (const a of data.athletes || []) {
-          await callAdminRpc('add_athlete_admin', {
-            p_id: a.id,
-            p_name: a.name,
-            p_base_level: a.base_level || 1
-          });
-        }
-        for (const w of data.workouts || []) {
-          await callAdminRpc('add_workout_admin', {
-            p_id: w.id,
-            p_athlete_id: w.athlete_id,
-            p_date: w.date,
-            p_km: w.km,
-            p_note: w.note || null
-          });
-        }
-        showToast('JSON importado a Supabase');
-      } catch {
-        showToast('Archivo JSON no válido', true);
-      }
-      e.target.value = '';
-    });
-
-    document.getElementById('copyWhatsappBtn').addEventListener('click', async () => {
-      const txt = document.getElementById('whatsappBox').value;
-      await navigator.clipboard.writeText(txt);
-      showToast('Parte copiado para WhatsApp');
-    });
-
-    document.getElementById('monthFilter').addEventListener('change', renderRanking);
-    document.getElementById('searchInput').addEventListener('input', renderRanking);
-
-    document.querySelectorAll('.nav button').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.nav button').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        const target = btn.dataset.tab;
-        ['ranking', 'workouts', 'data'].forEach((t) => {
-          document.getElementById('tab-' + t).classList.toggle('hidden', t !== target);
-        });
-      });
-    });
-
-    document.getElementById('workoutDate').value = new Date().toISOString().slice(0, 10);
-    setAdminState(adminPin);
-    loadCloudData();
-    subscribeRealtime();
+    // Fecha de hoy por defecto en el formulario
+    (function init() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      document.getElementById("dateInput").value = `${yyyy}-${mm}-${dd}`;
+      renderAll();
+      loadData();
+    })();
   </script>
 </body>
 </html>
