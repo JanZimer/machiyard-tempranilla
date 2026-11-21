@@ -557,3 +557,136 @@
     window.updateLevel = async (id, levelVal) => {
       const level = Math.max(1, parseInt(levelVal, 10) || 1);
       const ok = await callAdminRpc('set_athlete_level_admin', {
+        p_athlete_id: id,
+        p_base_level: level
+      });
+      if (ok) showToast('Nivel actualizado');
+    };
+
+    document.getElementById('unlockAdminBtn').addEventListener('click', async () => {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (!pin) return showToast('Escribe el PIN de administrador', true);
+      setAdminState(pin);
+      const { error } = await db.rpc('set_athlete_level_admin', {
+        p_pin: pin,
+        p_athlete_id: '__verify_pin__',
+        p_base_level: 1
+      });
+      if (error && error.message && error.message.toLowerCase().includes('pin')) {
+        setAdminState('');
+        showToast('PIN incorrecto', true);
+        return;
+      }
+      document.getElementById('pinInput').value = '';
+      showToast('Modo administrador activado');
+    });
+
+    document.getElementById('lockAdminBtn').addEventListener('click', () => {
+      setAdminState('');
+      showToast('Modo lectura activado');
+    });
+
+    document.getElementById('workoutForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = 'wrk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const ok = await callAdminRpc('add_workout_admin', {
+        p_id: id,
+        p_athlete_id: document.getElementById('workoutAthlete').value,
+        p_date: document.getElementById('workoutDate').value,
+        p_km: parseFloat(document.getElementById('workoutKm').value),
+        p_note: document.getElementById('workoutNote').value.trim() || null
+      });
+      if (ok) {
+        e.target.reset();
+        document.getElementById('workoutDate').value = new Date().toISOString().slice(0, 10);
+        showToast('Entrenamiento guardado en la nube');
+      }
+    });
+
+    document.getElementById('athleteForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = 'ath_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const ok = await callAdminRpc('add_athlete_admin', {
+        p_id: id,
+        p_name: document.getElementById('athleteName').value.trim(),
+        p_base_level: parseInt(document.getElementById('athleteLevel').value, 10) || 1
+      });
+      if (ok) {
+        e.target.reset();
+        document.getElementById('athleteLevel').value = 1;
+        showToast('Corredor añadido');
+      }
+    });
+
+    document.getElementById('seedBtn').addEventListener('click', async () => {
+      const ok = await callAdminRpc('seed_initial_nov2026_admin', {});
+      if (ok) showToast('Datos iniciales cargados');
+    });
+
+    document.getElementById('exportJsonBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify({ athletes, workouts }, null, 2)], {
+        type: 'application/json'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `machiyard_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importJsonInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const data = JSON.parse(await file.text());
+        for (const a of data.athletes || []) {
+          await callAdminRpc('add_athlete_admin', {
+            p_id: a.id,
+            p_name: a.name,
+            p_base_level: a.base_level || 1
+          });
+        }
+        for (const w of data.workouts || []) {
+          await callAdminRpc('add_workout_admin', {
+            p_id: w.id,
+            p_athlete_id: w.athlete_id,
+            p_date: w.date,
+            p_km: w.km,
+            p_note: w.note || null
+          });
+        }
+        showToast('JSON importado a Supabase');
+      } catch {
+        showToast('Archivo JSON no válido', true);
+      }
+      e.target.value = '';
+    });
+
+    document.getElementById('copyWhatsappBtn').addEventListener('click', async () => {
+      const txt = document.getElementById('whatsappBox').value;
+      await navigator.clipboard.writeText(txt);
+      showToast('Parte copiado para WhatsApp');
+    });
+
+    document.getElementById('monthFilter').addEventListener('change', renderRanking);
+    document.getElementById('searchInput').addEventListener('input', renderRanking);
+
+    document.querySelectorAll('.nav button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.tab;
+        ['ranking', 'workouts', 'data'].forEach((t) => {
+          document.getElementById('tab-' + t).classList.toggle('hidden', t !== target);
+        });
+      });
+    });
+
+    document.getElementById('workoutDate').value = new Date().toISOString().slice(0, 10);
+    setAdminState(adminPin);
+    loadCloudData();
+    subscribeRealtime();
+  </script>
+</body>
+</html>
