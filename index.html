@@ -1,846 +1,673 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#090d16">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="MachiYard">
-    <title>MachiYard Tempranilla - Gestión de Reto</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        slate: {
-                            850: '#162032',
-                            900: '#0f172a',
-                            950: '#090d16',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #090d16;
-            color: #f8fafc;
-            -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: contain;
-        }
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type=number] { -moz-appearance: textfield; }
-        .tab-panel { animation: fadeSlide 0.18s ease-out; }
-        @keyframes fadeSlide {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: #090d16; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MachiYard Tempranilla</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-2: #0b1220;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #22c55e;
+      --accent-dark: #16a34a;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 84px;
+    }
+    header {
+      background: var(--card-2);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      line-height: 1.2;
+    }
+    .sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .badge {
+      font-size: 0.75rem;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .badge.admin {
+      border-color: var(--accent);
+      color: #bbf7d0;
+      background: rgba(34, 197, 94, 0.14);
+    }
+    main {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 14px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    input, select, textarea, button {
+      font: inherit;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 9px 12px;
+      background: var(--card-2);
+      color: var(--text);
+    }
+    input, select, textarea {
+      width: 100%;
+    }
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #052e16;
+      border: none;
+      font-weight: 600;
+    }
+    button:hover { background: var(--accent-dark); }
+    button.secondary {
+      background: var(--card-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    button.danger {
+      background: rgba(239, 68, 68, 0.16);
+      color: #fecaca;
+      border: 1px solid rgba(239, 68, 68, 0.45);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .athlete-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .km-pill {
+      font-weight: 700;
+      color: #86efac;
+      white-space: nowrap;
+    }
+    .muted { color: var(--muted); font-size: 0.85rem; }
+    .hidden { display: none !important; }
+    .nav {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(11, 18, 32, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px;
+      display: flex;
+      gap: 6px;
+      z-index: 30;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+    }
+    .nav button {
+      background: transparent;
+      color: var(--muted);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+    }
+    .nav button.active {
+      background: var(--accent);
+      color: #052e16;
+    }
+    .toast {
+      position: fixed;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card-2);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      z-index: 50;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col pb-28 select-none">
-
-    <!-- Notificación Toast Flotante -->
-    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md pointer-events-none transition-all duration-300 opacity-0 -translate-y-4">
-        <div id="toast-inner" class="bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-2xl border border-emerald-400/30 flex items-center gap-3 text-sm font-semibold">
-            <span id="toast-icon" class="text-lg">✅</span>
-            <span id="toast-msg">Listo</span>
-        </div>
+<body>
+  <header>
+    <div>
+      <h1>MachiYard Tempranilla</h1>
+      <div class="sub" id="syncStatus">Conectando con Supabase...</div>
     </div>
+    <div class="badge" id="adminBadge">Modo lectura</div>
+  </header>
 
-    <!-- Modal de Confirmación Seguro -->
-    <div id="confirm-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl">
-            <h3 id="confirm-title" class="text-lg font-extrabold text-white mb-2">¿Confirmar acción?</h3>
-            <p id="confirm-text" class="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">Esta acción modificará los datos guardados.</p>
-            <div class="flex gap-3">
-                <button id="confirm-cancel-btn" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm transition">Cancelar</button>
-                <button id="confirm-ok-btn" class="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm transition">Aceptar</button>
-            </div>
+  <div class="toast hidden" id="toast"></div>
+
+  <main>
+    <!-- PESTAÑA CLASIFICACIÓN -->
+    <section id="tab-ranking">
+      <div class="card">
+        <div class="grid-2">
+          <div>
+            <label class="muted">Mes</label>
+            <select id="monthFilter"></select>
+          </div>
+          <div>
+            <label class="muted">Buscar corredor</label>
+            <input type="search" id="searchInput" placeholder="Nombre del corredor..." />
+          </div>
         </div>
-    </div>
+      </div>
 
-    <!-- Modal Historial / Detalle de Atleta -->
-    <div id="athlete-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="bg-slate-900 border-t sm:border border-slate-700 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[88vh] flex flex-col shadow-2xl">
-            <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-                <div>
-                    <h3 id="modal-name" class="text-xl font-black text-white">ATLETA</h3>
-                    <p id="modal-sub" class="text-xs text-emerald-400 font-semibold mt-0.5">Nivel 1 • 0 km totales</p>
-                </div>
-                <button onclick="closeAthleteModal()" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-lg">✕</button>
-            </div>
+      <div class="card" id="rankingList"></div>
 
-            <div class="px-5 py-3.5 bg-slate-850 border-b border-slate-800 flex items-center justify-between gap-3">
-                <div>
-                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-300 block">Nivel Inicial / Manual</span>
-                    <span class="text-[11px] text-slate-400">Escalón base del corredor (mín. 1)</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="changeAthleteBaseLevel(-1)" class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 text-white font-black text-lg active:scale-95">-</button>
-                    <span id="modal-base-level" class="w-8 text-center font-black text-base text-emerald-400">1</span>
-                    <button onclick="changeAthleteBaseLevel(1)" class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 text-white font-black text-lg active:scale-95">+</button>
-                </div>
-            </div>
-
-            <div id="modal-workouts" class="p-4 overflow-y-auto flex-1 space-y-2"></div>
-
-            <div class="p-4 border-t border-slate-800 flex items-center justify-between bg-slate-950/60 rounded-b-3xl">
-                <button onclick="askDeleteAthlete()" class="text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-950/40 border border-rose-900/50 px-3 py-2 rounded-xl">
-                    🗑️ Eliminar corredor
-                </button>
-                <button onclick="closeAthleteModal()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl">
-                    Cerrar
-                </button>
-            </div>
+      <div class="card">
+        <div class="row" style="justify-content: space-between; margin-bottom: 8px;">
+          <strong>Parte para WhatsApp</strong>
+          <button class="secondary" id="copyWhatsappBtn" type="button">Copiar parte</button>
         </div>
-    </div>
+        <textarea id="whatsappBox" rows="7" readonly></textarea>
+      </div>
+    </section>
 
-    <!-- CABECERA SUPERIOR FIJA -->
-    <header class="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-3">
-        <div class="max-w-2xl mx-auto flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-950/60 text-xl shrink-0">
-                    🏃‍♂️
-                </div>
-                <div class="min-w-0">
-                    <h1 class="font-black text-sm sm:text-base tracking-tight text-white truncate">
-                        MachiYard <span class="text-emerald-400">Tempranilla</span>
-                    </h1>
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-[11px] font-medium text-slate-400 truncate">Offline • 19 Corredores</span>
-                    </div>
-                </div>
+    <!-- PESTAÑA ENTRENOS -->
+    <section id="tab-workouts" class="hidden">
+      <div class="card admin-only hidden">
+        <h3>Registrar entrenamiento</h3>
+        <form id="workoutForm">
+          <div class="grid-2">
+            <div>
+              <label class="muted">Corredor</label>
+              <select id="workoutAthlete" required></select>
             </div>
+            <div>
+              <label class="muted">Fecha</label>
+              <input type="date" id="workoutDate" required />
+            </div>
+            <div>
+              <label class="muted">Kilómetros</label>
+              <input type="number" step="0.01" min="0.01" id="workoutKm" placeholder="Ej. 10.5" required />
+            </div>
+            <div>
+              <label class="muted">Nota (opcional)</label>
+              <input type="text" id="workoutNote" placeholder="Tirada, series..." />
+            </div>
+          </div>
+          <div class="row" style="margin-top: 10px;">
+            <button type="submit">Guardar entreno</button>
+          </div>
+        </form>
+      </div>
 
-            <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-xl p-1 shrink-0">
-                <button onclick="stepMonth(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-300 hover:bg-slate-800 active:scale-90 font-bold" title="Mes anterior">‹</button>
-                <span id="header-month-label" class="px-2 text-xs sm:text-sm font-extrabold text-emerald-300 min-w-[92px] text-center">Nov 2026</span>
-                <button onclick="stepMonth(1)" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-300 hover:bg-slate-800 active:scale-90 font-bold" title="Mes siguiente">›</button>
-            </div>
+      <div class="card">
+        <h3>Últimos entrenamientos</h3>
+        <div id="workoutsList"></div>
+      </div>
+    </section>
+
+    <!-- PESTAÑA DATOS / ADMIN -->
+    <section id="tab-data" class="hidden">
+      <div class="card">
+        <h3>Acceso de administrador</h3>
+        <p class="muted" id="adminHelp">Introduce el PIN de administrador para añadir o editar datos en la nube.</p>
+        <div class="row" id="pinLoginRow">
+          <input type="password" id="pinInput" inputmode="numeric" placeholder="PIN de administrador" style="max-width: 220px;" />
+          <button type="button" id="unlockAdminBtn">Desbloquear</button>
         </div>
-    </header>
-
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="flex-1 w-full max-w-2xl mx-auto px-4 pt-4 pb-12">
-
-        <!-- PESTAÑA 1: CLASIFICACIÓN -->
-        <section id="panel-ranking" class="tab-panel space-y-4">
-            <div class="bg-gradient-to-br from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/40 rounded-2xl p-4 shadow-lg">
-                <div class="flex items-center justify-between gap-2">
-                    <div class="min-w-0">
-                        <span class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded-md border border-amber-500/30">
-                            🏆 Líder del Reto (Ganador Provisional)
-                        </span>
-                        <h2 id="card-leader-name" class="text-lg sm:text-xl font-black text-white mt-1.5 truncate">VICKY</h2>
-                        <p id="card-leader-meta" class="text-xs text-slate-300 mt-0.5">Nivel 1 superado • 183 km</p>
-                    </div>
-                    <span class="text-3xl sm:text-4xl">👑</span>
-                </div>
-            </div>
-
-            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 space-y-2.5">
-                <div class="flex items-center justify-between gap-2 flex-wrap">
-                    <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
-                        <button id="filter-mode-month" onclick="setViewMode('month')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition">
-                            Mes Activo
-                        </button>
-                        <button id="filter-mode-all" onclick="setViewMode('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">
-                            Total Global
-                        </button>
-                    </div>
-                    <div class="text-xs text-slate-400 font-medium">
-                        Total grupo: <strong id="summary-group-km" class="text-emerald-400 font-extrabold">0 km</strong>
-                    </div>
-                </div>
-
-                <div class="relative">
-                    <input type="text" id="search-athlete" oninput="renderRanking()" placeholder="🔍 Buscar corredor por nombre..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-9 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
-                    <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs font-bold px-1.5 py-0.5">✕</button>
-                </div>
-            </div>
-
-            <div id="ranking-container" class="space-y-2.5"></div>
-        </section>
-
-        <!-- PESTAÑA 2: + ENTRENO -->
-        <section id="panel-add" class="tab-panel hidden space-y-5">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-black text-white flex items-center gap-2">
-                        <span>⏱️</span> Añadir Entrenamiento
-                    </h2>
-                    <span class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">Mín. 5 km</span>
-                </div>
-
-                <form id="form-workout" onsubmit="submitWorkout(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">1. Corredor</label>
-                        <select id="select-athlete" required onchange="syncChipsHighlight()" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3.5 text-white font-bold text-sm sm:text-base focus:outline-none focus:border-emerald-500">
-                            <option value="">-- Selecciona un corredor --</option>
-                        </select>
-                        <div class="mt-2.5">
-                            <span class="text-[11px] text-slate-500 font-semibold block mb-1.5">Toque rápido:</span>
-                            <div id="athlete-chips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1"></div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">2. Fecha</label>
-                            <input type="date" id="input-date" required class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3.5 text-white font-bold text-sm focus:outline-none focus:border-emerald-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">3. Kilómetros</label>
-                            <div class="relative">
-                                <input type="number" id="input-km" step="0.01" min="0.1" placeholder="10.0" required oninput="checkKmRuleWarning()" class="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-4 pr-12 py-3.5 text-white font-black text-lg focus:outline-none focus:border-emerald-500">
-                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">km</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <span class="text-[11px] text-slate-500 font-semibold block mb-1.5">Sumar distancia rápida:</span>
-                        <div class="grid grid-cols-4 gap-2">
-                            <button type="button" onclick="addQuickKm(5)" class="bg-slate-950 hover:bg-slate-800 active:scale-95 border border-slate-700/80 text-emerald-400 font-extrabold text-xs py-2.5 rounded-xl transition">+5 km</button>
-                            <button type="button" onclick="addQuickKm(10)" class="bg-slate-950 hover:bg-slate-800 active:scale-95 border border-slate-700/80 text-emerald-400 font-extrabold text-xs py-2.5 rounded-xl transition">+10 km</button>
-                            <button type="button" onclick="addQuickKm(15)" class="bg-slate-950 hover:bg-slate-800 active:scale-95 border border-slate-700/80 text-emerald-400 font-extrabold text-xs py-2.5 rounded-xl transition">+15 km</button>
-                            <button type="button" onclick="addQuickKm(21.1)" class="bg-slate-950 hover:bg-slate-800 active:scale-95 border border-slate-700/80 text-amber-400 font-extrabold text-xs py-2.5 rounded-xl transition">+21.1 km</button>
-                        </div>
-                    </div>
-
-                    <div id="km-warning-box" class="hidden bg-amber-500/15 border border-amber-500/40 rounded-2xl p-3 flex items-start gap-2.5">
-                        <span class="text-base">⚠️</span>
-                        <p class="text-xs text-amber-200 leading-relaxed">
-                            <strong>Aviso Reglamento:</strong> El mínimo oficial por actividad es de <strong>5 km</strong>. Puedes guardarlo igualmente si es una excepción válida.
-                        </p>
-                    </div>
-
-                    <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white font-black text-base py-4 rounded-2xl shadow-lg shadow-emerald-950/60 transition flex items-center justify-center gap-2">
-                        <span>💾</span> Guardar Entreno
-                    </button>
-                </form>
-            </div>
-
-            <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5">
-                <h3 class="text-sm font-extrabold text-white mb-3 flex items-center gap-2">
-                    <span>👤</span> Dar de alta nuevo corredor
-                </h3>
-                <form onsubmit="submitNewAthlete(event)" class="flex gap-2">
-                    <input type="text" id="new-athlete-input" placeholder="NOMBRE O ALIAS" required class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white font-semibold uppercase focus:outline-none focus:border-emerald-500">
-                    <button type="submit" class="bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-emerald-400 font-extrabold text-sm px-4 py-3 rounded-xl transition whitespace-nowrap">
-                        + Añadir
-                    </button>
-                </form>
-            </div>
-
-            <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-4">
-                <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3 px-1">Últimos registros guardados</h3>
-                <div id="recent-workouts-container" class="space-y-2"></div>
-            </div>
-        </section>
-
-        <!-- PESTAÑA 3: WHATSAPP -->
-        <section id="panel-whatsapp" class="tab-panel hidden space-y-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl">
-                <div class="flex items-center justify-between mb-1.5">
-                    <h2 class="text-lg font-black text-white flex items-center gap-2">
-                        <span>💬</span> Parte para WhatsApp
-                    </h2>
-                    <button onclick="buildWhatsAppReport()" class="text-xs font-bold text-emerald-400 hover:underline">🔄 Regenerar</button>
-                </div>
-                <p class="text-xs text-slate-400 mb-4">Listo para copiar y pegar directamente en el grupo del club.</p>
-
-                <div class="flex flex-wrap gap-2 mb-3">
-                    <label class="inline-flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 cursor-pointer">
-                        <input type="checkbox" id="wa-opt-passed" checked onchange="buildWhatsAppReport()" class="accent-emerald-500">
-                        Destacar objetivo cumplido
-                    </label>
-                </div>
-
-                <textarea id="wa-textarea" rows="15" class="w-full bg-slate-950 border border-slate-700 rounded-2xl p-3.5 text-xs sm:text-sm text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-emerald-500"></textarea>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                    <button id="btn-copy-wa" onclick="copyWhatsAppReport()" class="bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-black text-sm py-3.5 px-4 rounded-2xl shadow-lg shadow-emerald-950/50 transition flex items-center justify-center gap-2">
-                        <span>📋</span> <span id="btn-copy-wa-text">Copiar texto</span>
-                    </button>
-                    <button onclick="openInWhatsApp()" class="bg-[#25D366] hover:bg-[#20bd5a] active:scale-[0.98] text-slate-950 font-black text-sm py-3.5 px-4 rounded-2xl shadow-lg transition flex items-center justify-center gap-2">
-                        <span>📲</span> Enviar por WhatsApp
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- PESTAÑA 4: DATOS -->
-        <section id="panel-data" class="tab-panel hidden space-y-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5">
-                <h2 class="text-base font-black text-white mb-1 flex items-center gap-2">
-                    <span>🪜</span> Escalera Progresiva (Cero Descensos)
-                </h2>
-                <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-                    Si alcanzas el objetivo de tu nivel en el mes, subes +1 escalón. Si no llegas, mantienes tu nivel actual sin bajar.
-                </p>
-
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[11px] text-slate-400 block">Nivel 1 (Nov)</span>
-                        <strong class="text-sm text-emerald-400 font-black">150 km</strong>
-                    </div>
-                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[11px] text-slate-400 block">Nivel 2 (Dic)</span>
-                        <strong class="text-sm text-emerald-400 font-black">175 km</strong>
-                    </div>
-                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[11px] text-slate-400 block">Nivel 3 (Ene)</span>
-                        <strong class="text-sm text-emerald-400 font-black">200 km</strong>
-                    </div>
-                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[11px] text-slate-400 block">Nivel 4 (Feb)</span>
-                        <strong class="text-sm text-emerald-400 font-black">225 km</strong>
-                    </div>
-                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[11px] text-slate-400 block">Nivel 5 (Mar)</span>
-                        <strong class="text-sm text-emerald-400 font-black">250 km</strong>
-                    </div>
-                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[11px] text-slate-400 block">Nivel 6 (Abr)</span>
-                        <strong class="text-sm text-emerald-400 font-black">290 km</strong>
-                    </div>
-                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[11px] text-slate-400 block">Nivel 7 (May)</span>
-                        <strong class="text-sm text-emerald-400 font-black">340 km</strong>
-                    </div>
-                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
-                        <span class="text-[11px] text-slate-400 block">Nivel 8+ (Jun+)</span>
-                        <strong class="text-sm text-amber-400 font-black">400+ km</strong>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-3">
-                <h2 class="text-base font-black text-white flex items-center gap-2">
-                    <span>💾</span> Exportar y Copias de Seguridad
-                </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                    <button onclick="exportJSON()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs py-3.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 transition">
-                        <span>📤</span> Backup JSON
-                    </button>
-                    <label class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs py-3.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 cursor-pointer transition">
-                        <span>📥</span> Importar JSON
-                        <input type="file" accept=".json" onchange="importJSON(event)" class="hidden">
-                    </label>
-                    <button onclick="exportCSV()" class="bg-emerald-950/70 hover:bg-emerald-900/70 border border-emerald-700/60 text-emerald-300 font-bold text-xs py-3.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 transition">
-                        <span>📊</span> Excel (.CSV)
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-slate-900/70 border border-slate-800 rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h3 class="text-sm font-extrabold text-white">Restaurar datos iniciales de Noviembre</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Vuelve a cargar los 19 atletas oficiales con sus kilómetros de noviembre de 2026.</p>
-                </div>
-                <button onclick="askRestoreInitialNov2026()" class="w-full sm:w-auto bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 font-bold text-xs py-3 px-4 rounded-xl whitespace-nowrap transition">
-                    🔄 Restaurar Noviembre (19)
-                </button>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- BARRA INFERIOR COMPACTA Y DESPLAZADA A LA IZQUIERDA -->
-    <nav class="fixed bottom-3 left-3 right-20 max-w-sm bg-slate-950/95 backdrop-blur-lg border border-slate-800/90 rounded-2xl shadow-2xl z-30">
-        <div class="grid grid-cols-4 h-15">
-            <button onclick="switchTab('ranking')" id="tab-btn-ranking" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-emerald-400 transition">
-                <span class="text-lg leading-none">🏆</span>
-                <span class="text-[9px] font-extrabold tracking-tight">Clasificación</span>
-            </button>
-            <button onclick="switchTab('add')" id="tab-btn-add" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200 transition">
-                <span class="text-lg leading-none">➕</span>
-                <span class="text-[9px] font-extrabold tracking-tight">+ Entreno</span>
-            </button>
-            <button onclick="switchTab('whatsapp')" id="tab-btn-whatsapp" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200 transition">
-                <span class="text-lg leading-none">💬</span>
-                <span class="text-[9px] font-extrabold tracking-tight">WhatsApp</span>
-            </button>
-            <button onclick="switchTab('data')" id="tab-btn-data" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200 transition">
-                <span class="text-lg leading-none">⚙️</span>
-                <span class="text-[9px] font-extrabold tracking-tight">Datos</span>
-            </button>
+        <div class="row hidden" id="adminActiveRow">
+          <button type="button" class="secondary" id="lockAdminBtn">Bloquear modo admin</button>
         </div>
-    </nav>
+      </div>
 
-    <script>
-        const STORAGE_KEY = 'machiyard_v4_nov2026';
+      <div class="card admin-only hidden">
+        <h3>Nuevo corredor</h3>
+        <form id="athleteForm">
+          <div class="grid-2">
+            <div>
+              <label class="muted">Nombre</label>
+              <input type="text" id="athleteName" placeholder="NOMBRE APELLIDO" required />
+            </div>
+            <div>
+              <label class="muted">Nivel base</label>
+              <input type="number" min="1" id="athleteLevel" value="1" required />
+            </div>
+          </div>
+          <div class="row" style="margin-top: 10px;">
+            <button type="submit">Añadir corredor</button>
+          </div>
+        </form>
+      </div>
 
-        const LEVEL_GOALS = {
-            1: 150, 2: 175, 3: 200, 4: 225, 5: 250, 6: 290, 7: 340, 8: 400
-        };
+      <div class="card admin-only hidden">
+        <h3>Corredores y nivel base</h3>
+        <div id="athletesManageList"></div>
+      </div>
 
-        function getGoalForLevel(lvl) {
-            if (LEVEL_GOALS[lvl]) return LEVEL_GOALS[lvl];
-            return 400 + (lvl - 8) * 50;
+      <div class="card admin-only hidden">
+        <h3>Datos iniciales y copia JSON</h3>
+        <div class="row">
+          <button type="button" class="secondary" id="seedBtn">Cargar datos iniciales Nov 2026</button>
+          <button type="button" class="secondary" id="exportJsonBtn">Backup JSON</button>
+          <label class="secondary" style="padding: 9px 12px; border-radius: 10px; cursor: pointer;">
+            Importar JSON
+            <input type="file" id="importJsonInput" accept="application/json" class="hidden" />
+          </label>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav">
+    <button type="button" class="active" data-tab="ranking">Clasificación</button>
+    <button type="button" data-tab="workouts">Entrenos</button>
+    <button type="button" data-tab="data">Datos</button>
+  </nav>
+
+  <script>
+    const SUPABASE_URL = 'https://iduxcbrxkxzgnldnwiwz.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_zRpJbuDMLiEZTYI0k5Q3bw_6CBvqXt_';
+
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    let athletes = [];
+    let workouts = [];
+    let adminPin = sessionStorage.getItem('machiyard_admin_pin') || '';
+    let realtimeChannel = null;
+
+    const toastEl = document.getElementById('toast');
+    const syncStatusEl = document.getElementById('syncStatus');
+
+    function showToast(msg, isError = false) {
+      toastEl.textContent = msg;
+      toastEl.style.borderColor = isError ? 'var(--danger)' : 'var(--accent)';
+      toastEl.classList.remove('hidden');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toastEl.classList.add('hidden'), 3000);
+    }
+
+    function setAdminState(pin) {
+      adminPin = pin || '';
+      if (adminPin) {
+        sessionStorage.setItem('machiyard_admin_pin', adminPin);
+      } else {
+        sessionStorage.removeItem('machiyard_admin_pin');
+      }
+      const isAdmin = Boolean(adminPin);
+      document.getElementById('adminBadge').textContent = isAdmin ? 'Modo admin' : 'Modo lectura';
+      document.getElementById('adminBadge').classList.toggle('admin', isAdmin);
+      document.getElementById('pinLoginRow').classList.toggle('hidden', isAdmin);
+      document.getElementById('adminActiveRow').classList.toggle('hidden', !isAdmin);
+      document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin));
+      renderAll();
+    }
+
+    async function loadCloudData(silent = false) {
+      if (!silent) syncStatusEl.textContent = 'Sincronizando con Supabase...';
+      const [athRes, wrkRes] = await Promise.all([
+        db.from('athletes').select('*').order('name', { ascending: true }),
+        db.from('workouts').select('*').order('date', { ascending: false })
+      ]);
+
+      if (athRes.error || wrkRes.error) {
+        syncStatusEl.textContent = 'Error al conectar con Supabase';
+        if (!silent) showToast('No se pudieron cargar los datos de la nube', true);
+        return;
+      }
+
+      athletes = athRes.data || [];
+      workouts = wrkRes.data || [];
+      syncStatusEl.textContent = `Sincronizado · ${new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+      populateMonths();
+      renderAll();
+    }
+
+    function subscribeRealtime() {
+      if (realtimeChannel) {
+        db.removeChannel(realtimeChannel);
+      }
+      realtimeChannel = db
+        .channel('machiyard-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'athletes' }, () => loadCloudData(true))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'workouts' }, () => loadCloudData(true))
+        .subscribe();
+    }
+
+    function populateMonths() {
+      const select = document.getElementById('monthFilter');
+      const currentVal = select.value || '2026-11';
+      const months = new Set(['2026-11']);
+      workouts.forEach((w) => {
+        if (w.date && w.date.length >= 7) months.add(w.date.slice(0, 7));
+      });
+      const sorted = Array.from(months).sort().reverse();
+      select.innerHTML =
+        `<option value="ALL">Todos los meses</option>` +
+        sorted.map((m) => `<option value="${m}">${m}</option>`).join('');
+      select.value = Array.from(select.options).some((o) => o.value === currentVal) ? currentVal : 'ALL';
+    }
+
+    function getFilteredWorkouts() {
+      const month = document.getElementById('monthFilter').value;
+      if (!month || month === 'ALL') return workouts;
+      return workouts.filter((w) => w.date && w.date.startsWith(month));
+    }
+
+    function renderRanking() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const filteredWorkouts = getFilteredWorkouts();
+
+      const totals = new Map();
+      workouts.forEach((w) => {
+        const prev = totals.get(w.athlete_id) || { totalAll: 0, totalFiltered: 0 };
+        prev.totalAll += Number(w.km) || 0;
+        totals.set(w.athlete_id, prev);
+      });
+      filteredWorkouts.forEach((w) => {
+        const prev = totals.get(w.athlete_id) || { totalAll: 0, totalFiltered: 0 };
+        prev.totalFiltered += Number(w.km) || 0;
+        totals.set(w.athlete_id, prev);
+      });
+
+      const rows = athletes
+        .map((a) => {
+          const stats = totals.get(a.id) || { totalAll: 0, totalFiltered: 0 };
+          return { ...a, kmMes: stats.totalFiltered, kmTotal: stats.totalAll };
+        })
+        .filter((a) => !query || a.name.toLowerCase().includes(query))
+        .sort((a, b) => b.kmMes - a.kmMes || a.name.localeCompare(b.name, 'es'));
+
+      const listEl = document.getElementById('rankingList');
+      if (!rows.length) {
+        listEl.innerHTML = '<p class="muted">No hay corredores que coincidan con el filtro.</p>';
+      } else {
+        listEl.innerHTML = rows
+          .map(
+            (r, idx) => `
+          <div class="athlete-item">
+            <div>
+              <strong>#${idx + 1} ${r.name}</strong>
+              <div class="muted">Nivel base ${r.base_level} · Acumulado: ${r.kmTotal.toFixed(1)} km</div>
+            </div>
+            <div class="km-pill">${r.kmMes.toFixed(1)} km</div>
+          </div>`
+          )
+          .join('');
+      }
+
+      const monthLabel = document.getElementById('monthFilter').value;
+      const lines = [
+        `🏃‍♂️ *MachiYard Tempranilla* (${monthLabel === 'ALL' ? 'Todos los meses' : monthLabel})`,
+        ...rows.map((r, i) => `${i + 1}. *${r.name}* — ${r.kmMes.toFixed(1)} km (Nv.${r.base_level})`)
+      ];
+      document.getElementById('whatsappBox').value = lines.join('\n');
+    }
+
+    function renderWorkouts() {
+      const athleteSelect = document.getElementById('workoutAthlete');
+      athleteSelect.innerHTML = athletes
+        .map((a) => `<option value="${a.id}">${a.name}</option>`)
+        .join('');
+
+      const nameById = Object.fromEntries(athletes.map((a) => [a.id, a.name]));
+      const listEl = document.getElementById('workoutsList');
+
+      if (!workouts.length) {
+        listEl.innerHTML = '<p class="muted">Aún no hay entrenamientos registrados.</p>';
+        return;
+      }
+
+      listEl.innerHTML = workouts
+        .slice(0, 50)
+        .map(
+          (w) => `
+        <div class="athlete-item">
+          <div>
+            <strong>${nameById[w.athlete_id] || w.athlete_id}</strong> · <span class="km-pill">${Number(w.km).toFixed(1)} km</span>
+            <div class="muted">${w.date}${w.note ? ` · ${w.note}` : ''}</div>
+          </div>
+          ${
+            adminPin
+              ? `<button type="button" class="danger" onclick="deleteWorkout('${w.id}')">Borrar</button>`
+              : ''
+          }
+        </div>`
+        )
+        .join('');
+    }
+
+    function renderAthletesManage() {
+      const container = document.getElementById('athletesManageList');
+      if (!athletes.length) {
+        container.innerHTML = '<p class="muted">Sin corredores.</p>';
+        return;
+      }
+      container.innerHTML = athletes
+        .map(
+          (a) => `
+        <div class="athlete-item">
+          <div>
+            <strong>${a.name}</strong>
+          </div>
+          <div class="row">
+            <label class="muted">Nivel:</label>
+            <input type="number" min="1" value="${a.base_level}" style="width: 72px;" onchange="updateLevel('${a.id}', this.value)" />
+            <button type="button" class="danger" onclick="deleteAthlete('${a.id}')">Eliminar</button>
+          </div>
+        </div>`
+        )
+        .join('');
+    }
+
+    function renderAll() {
+      renderRanking();
+      renderWorkouts();
+      renderAthletesManage();
+    }
+
+    async function callAdminRpc(fnName, params) {
+      if (!adminPin) {
+        showToast('Introduce primero el PIN de administrador', true);
+        return false;
+      }
+      const { error } = await db.rpc(fnName, { p_pin: adminPin, ...params });
+      if (error) {
+        if (error.message && error.message.toLowerCase().includes('pin')) {
+          setAdminState('');
+          showToast('PIN incorrecto. Se bloqueó el modo admin.', true);
+        } else {
+          showToast(error.message || 'Error al guardar en Supabase', true);
         }
+        return false;
+      }
+      await loadCloudData(true);
+      return true;
+    }
 
-        const SEED_NOV_2026 = [
-            { id: 'ath_01', name: 'VICKY', km: 183 },
-            { id: 'ath_02', name: 'MANUEL LINARES', km: 168 },
-            { id: 'ath_03', name: 'JUAN RAMON', km: 162 },
-            { id: 'ath_04', name: 'KAMACHO', km: 122 },
-            { id: 'ath_05', name: 'MOISES', km: 113 },
-            { id: 'ath_06', name: 'LUZMA D.', km: 105 },
-            { id: 'ath_07', name: 'JERO CUENCA', km: 95 },
-            { id: 'ath_08', name: 'JAVI MAURO', km: 92 },
-            { id: 'ath_09', name: 'MARI CARMEN S.', km: 87 },
-            { id: 'ath_10', name: 'CURRO MARTIN', km: 86 },
-            { id: 'ath_11', name: 'JUAN C. AMAYA', km: 80 },
-            { id: 'ath_12', name: 'FRAN RANCHAL', km: 73 },
-            { id: 'ath_13', name: 'LAURA', km: 73 },
-            { id: 'ath_14', name: 'JUANAN', km: 55 },
-            { id: 'ath_15', name: 'ANTONIO RAMILA', km: 49 },
-            { id: 'ath_16', name: 'MIGUEL AGUILERA', km: 48 },
-            { id: 'ath_17', name: 'VANESA', km: 39 },
-            { id: 'ath_18', name: 'PEDRO', km: 21 },
-            { id: 'ath_19', name: 'JUAN MALAGA', km: 21 }
-        ];
+    window.deleteWorkout = async (id) => {
+      const ok = await callAdminRpc('delete_workout_admin', { p_workout_id: id });
+      if (ok) showToast('Entrenamiento eliminado');
+    };
 
-        function buildInitialState() {
-            const athletes = SEED_NOV_2026.map(item => ({ id: item.id, name: item.name, baseLevel: 1 }));
-            const workouts = SEED_NOV_2026.map((item, index) => ({
-                id: `wrk_init_${String(index + 1).padStart(2, '0')}`,
-                athleteId: item.id,
-                date: '2026-11-17',
-                km: item.km,
-                note: 'Acumulado oficial Noviembre'
-            }));
-            return { athletes, workouts };
+    window.deleteAthlete = async (id) => {
+      const ok = await callAdminRpc('delete_athlete_admin', { p_athlete_id: id });
+      if (ok) showToast('Corredor eliminado');
+    };
+
+    window.updateLevel = async (id, levelVal) => {
+      const level = Math.max(1, parseInt(levelVal, 10) || 1);
+      const ok = await callAdminRpc('set_athlete_level_admin', {
+        p_athlete_id: id,
+        p_base_level: level
+      });
+      if (ok) showToast('Nivel actualizado');
+    };
+
+    document.getElementById('unlockAdminBtn').addEventListener('click', async () => {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (!pin) return showToast('Escribe el PIN de administrador', true);
+      // Probamos el PIN llamando a la función seed con un id inexistente o verificando vía RPC
+      setAdminState(pin);
+      const { error } = await db.rpc('set_athlete_level_admin', {
+        p_pin: pin,
+        p_athlete_id: '__verify_pin__',
+        p_base_level: 1
+      });
+      if (error && error.message && error.message.toLowerCase().includes('pin')) {
+        setAdminState('');
+        showToast('PIN incorrecto', true);
+        return;
+      }
+      document.getElementById('pinInput').value = '';
+      showToast('Modo administrador activado');
+    });
+
+    document.getElementById('lockAdminBtn').addEventListener('click', () => {
+      setAdminState('');
+      showToast('Modo lectura activado');
+    });
+
+    document.getElementById('workoutForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = 'wrk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const ok = await callAdminRpc('add_workout_admin', {
+        p_id: id,
+        p_athlete_id: document.getElementById('workoutAthlete').value,
+        p_date: document.getElementById('workoutDate').value,
+        p_km: parseFloat(document.getElementById('workoutKm').value),
+        p_note: document.getElementById('workoutNote').value.trim() || null
+      });
+      if (ok) {
+        e.target.reset();
+        document.getElementById('workoutDate').value = new Date().toISOString().slice(0, 10);
+        showToast('Entrenamiento guardado en la nube');
+      }
+    });
+
+    document.getElementById('athleteForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = 'ath_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const ok = await callAdminRpc('add_athlete_admin', {
+        p_id: id,
+        p_name: document.getElementById('athleteName').value.trim(),
+        p_base_level: parseInt(document.getElementById('athleteLevel').value, 10) || 1
+      });
+      if (ok) {
+        e.target.reset();
+        document.getElementById('athleteLevel').value = 1;
+        showToast('Corredor añadido');
+      }
+    });
+
+    document.getElementById('seedBtn').addEventListener('click', async () => {
+      const ok = await callAdminRpc('seed_initial_nov2026_admin', {});
+      if (ok) showToast('Datos iniciales cargados');
+    });
+
+    document.getElementById('exportJsonBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify({ athletes, workouts }, null, 2)], {
+        type: 'application/json'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `machiyard_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importJsonInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const data = JSON.parse(await file.text());
+        for (const a of data.athletes || []) {
+          await callAdminRpc('add_athlete_admin', {
+            p_id: a.id,
+            p_name: a.name,
+            p_base_level: a.base_level || 1
+          });
         }
-
-        let state = { athletes: [], workouts: [] };
-        let selectedMonth = '2026-11';
-        let viewMode = 'month';
-        let modalAthleteId = null;
-
-        window.onload = function() {
-            initData();
-            setTodayInputDate();
-            renderAll();
-        };
-
-        function initData() {
-            try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    if (parsed && Array.isArray(parsed.athletes) && parsed.athletes.length > 0) {
-                        state = parsed;
-                        return;
-                    }
-                }
-            } catch (err) {}
-            state = buildInitialState();
-            persistData();
+        for (const w of data.workouts || []) {
+          await callAdminRpc('add_workout_admin', {
+            p_id: w.id,
+            p_athlete_id: w.athlete_id,
+            p_date: w.date,
+            p_km: w.km,
+            p_note: w.note || null
+          });
         }
+        showToast('JSON importado a Supabase');
+      } catch {
+        showToast('Archivo JSON no válido', true);
+      }
+      e.target.value = '';
+    });
 
-        function persistData() {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (err) {}
-        }
+    document.getElementById('copyWhatsappBtn').addEventListener('click', async () => {
+      const txt = document.getElementById('whatsappBox').value;
+      await navigator.clipboard.writeText(txt);
+      showToast('Parte copiado para WhatsApp');
+    });
 
-        function setTodayInputDate() {
-            const now = new Date();
-            const y = now.getFullYear();
-            const m = String(now.getMonth() + 1).padStart(2, '0');
-            const d = String(now.getDate()).padStart(2, '0');
-            document.getElementById('input-date').value = `${y}-${m}-${d}`;
-        }
+    document.getElementById('monthFilter').addEventListener('change', renderRanking);
+    document.getElementById('searchInput').addEventListener('input', renderRanking);
 
-        function evaluateAthlete(athlete, activeYm) {
-            const myWorkouts = state.workouts.filter(w => w.athleteId === athlete.id);
-            const monthlyMap = {};
-            let totalGlobalKm = 0;
+    document.querySelectorAll('.nav button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.tab;
+        ['ranking', 'workouts', 'data'].forEach((t) => {
+          document.getElementById('tab-' + t).classList.toggle('hidden', t !== target);
+        });
+      });
+    });
 
-            myWorkouts.forEach(w => {
-                const ym = w.date.substring(0, 7);
-                const val = parseFloat(w.km) || 0;
-                monthlyMap[ym] = (monthlyMap[ym] || 0) + val;
-                totalGlobalKm += val;
-            });
-
-            const timeline = Array.from(new Set([...Object.keys(monthlyMap), activeYm])).sort();
-            let currentLvl = athlete.baseLevel || 1;
-            let levelInSelectedMonth = currentLvl;
-            let goalInSelectedMonth = getGoalForLevel(currentLvl);
-            let kmInSelectedMonth = monthlyMap[activeYm] || 0;
-            let completedSelectedMonth = false;
-
-            for (const ym of timeline) {
-                if (ym > activeYm) break;
-                const goal = getGoalForLevel(currentLvl);
-                const km = monthlyMap[ym] || 0;
-                const completed = km >= goal;
-
-                if (ym === activeYm) {
-                    levelInSelectedMonth = currentLvl;
-                    goalInSelectedMonth = goal;
-                    kmInSelectedMonth = km;
-                    completedSelectedMonth = completed;
-                }
-                if (completed) currentLvl += 1;
-            }
-
-            return {
-                id: athlete.id,
-                name: athlete.name,
-                baseLevel: athlete.baseLevel || 1,
-                levelInMonth: levelInSelectedMonth,
-                nextOrCurrentLevel: currentLvl,
-                goalKm: goalInSelectedMonth,
-                monthKm: Number(kmInSelectedMonth.toFixed(2)),
-                totalKm: Number(totalGlobalKm.toFixed(2)),
-                completedMonth: completedSelectedMonth,
-                workouts: myWorkouts.sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id))
-            };
-        }
-
-        function computeStandings() {
-            const evaluated = state.athletes.map(a => evaluateAthlete(a, selectedMonth));
-            const primaryRanking = [...evaluated].sort((a, b) => {
-                if (viewMode === 'all') {
-                    if (b.totalKm !== a.totalKm) return b.totalKm - a.totalKm;
-                    return b.nextOrCurrentLevel - a.nextOrCurrentLevel;
-                }
-                if (b.nextOrCurrentLevel !== a.nextOrCurrentLevel) return b.nextOrCurrentLevel - a.nextOrCurrentLevel;
-                if (b.monthKm !== a.monthKm) return b.monthKm - a.monthKm;
-                return a.name.localeCompare(b.name);
-            });
-
-            const challengeRanking = [...evaluated].sort((a, b) => {
-                if (b.nextOrCurrentLevel !== a.nextOrCurrentLevel) return b.nextOrCurrentLevel - a.nextOrCurrentLevel;
-                return b.totalKm - a.totalKm;
-            });
-
-            return {
-                primaryRanking,
-                challengeWinner: challengeRanking.length > 0 ? challengeRanking[0] : null
-            };
-        }
-
-        function submitWorkout(e) {
-            e.preventDefault();
-            const athleteId = document.getElementById('select-athlete').value;
-            const date = document.getElementById('input-date').value;
-            const kmVal = parseFloat(document.getElementById('input-km').value);
-
-            if (!athleteId || !date || isNaN(kmVal) || kmVal <= 0) return;
-
-            state.workouts.push({
-                id: 'wrk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-                athleteId,
-                date,
-                km: Number(kmVal.toFixed(2))
-            });
-
-            persistData();
-            selectedMonth = date.substring(0, 7);
-            document.getElementById('input-km').value = '';
-            document.getElementById('km-warning-box').classList.add('hidden');
-            renderAll();
-            showToast('Entrenamiento guardado', '✅');
-        }
-
-        function submitNewAthlete(e) {
-            e.preventDefault();
-            const input = document.getElementById('new-athlete-input');
-            const cleanName = input.value.trim().toUpperCase();
-            if (!cleanName) return;
-
-            if (state.athletes.some(a => a.name.toUpperCase() === cleanName)) return;
-
-            state.athletes.push({ id: 'ath_' + Date.now(), name: cleanName, baseLevel: 1 });
-            persistData();
-            input.value = '';
-            renderAll();
-            showToast(`Corredor ${cleanName} añadido`, '🏃‍♂️');
-        }
-
-        function deleteWorkoutById(workoutId) {
-            state.workouts = state.workouts.filter(w => w.id !== workoutId);
-            persistData();
-            renderAll();
-            if (modalAthleteId) openAthleteModal(modalAthleteId);
-            showToast('Entrenamiento eliminado', '🗑️');
-        }
-
-        function addQuickKm(amount) {
-            const input = document.getElementById('input-km');
-            input.value = Number(((parseFloat(input.value) || 0) + amount).toFixed(2));
-            checkKmRuleWarning();
-        }
-
-        function checkKmRuleWarning() {
-            const val = parseFloat(document.getElementById('input-km').value);
-            document.getElementById('km-warning-box').classList.toggle('hidden', !(val > 0 && val < 5));
-        }
-
-        function selectAthleteChip(id) {
-            document.getElementById('select-athlete').value = id;
-            syncChipsHighlight();
-            document.getElementById('input-km').focus();
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-            document.getElementById(`panel-${tabId}`).classList.remove('hidden');
-            document.querySelectorAll('.nav-tab').forEach(b => {
-                b.classList.remove('text-emerald-400');
-                b.classList.add('text-slate-400');
-            });
-            const active = document.getElementById(`tab-btn-${tabId}`);
-            active.classList.remove('text-slate-400');
-            active.classList.add('text-emerald-400');
-            if (tabId === 'whatsapp') buildWhatsAppReport();
-        }
-
-        function stepMonth(delta) {
-            const [y, m] = selectedMonth.split('-').map(Number);
-            const d = new Date(y, m - 1 + delta, 1);
-            selectedMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            renderAll();
-        }
-
-        function setViewMode(mode) {
-            viewMode = mode;
-            document.getElementById('filter-mode-month').className = mode === 'month' ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition' : 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition';
-            document.getElementById('filter-mode-all').className = mode === 'all' ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition' : 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition';
-            renderRanking();
-        }
-
-        function clearSearch() {
-            document.getElementById('search-athlete').value = '';
-            renderRanking();
-        }
-
-        function formatShortMonth(ym) {
-            const [y, m] = ym.split('-').map(Number);
-            const names = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-            return `${names[m - 1]} ${y}`;
-        }
-
-        function formatLongMonth(ym) {
-            const [y, m] = ym.split('-').map(Number);
-            const names = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            return `${names[m - 1]} ${y}`;
-        }
-
-        function renderAll() {
-            document.getElementById('header-month-label').textContent = formatShortMonth(selectedMonth);
-            renderRanking();
-            renderAthleteControls();
-            renderRecentWorkouts();
-            if (!document.getElementById('panel-whatsapp').classList.contains('hidden')) buildWhatsAppReport();
-        }
-
-        function renderRanking() {
-            const { primaryRanking, challengeWinner } = computeStandings();
-            const searchQuery = document.getElementById('search-athlete').value.trim().toLowerCase();
-            document.getElementById('clear-search-btn').classList.toggle('hidden', searchQuery.length === 0);
-
-            if (challengeWinner) {
-                document.getElementById('card-leader-name').textContent = challengeWinner.name;
-                const lvlLabel = challengeWinner.completedMonth ? `Nivel ${challengeWinner.levelInMonth} superado` : `Nivel ${challengeWinner.nextOrCurrentLevel}`;
-                document.getElementById('card-leader-meta').textContent = `${lvlLabel} • ${challengeWinner.totalKm} km`;
-            }
-
-            const groupSum = primaryRanking.reduce((sum, a) => sum + (viewMode === 'all' ? a.totalKm : a.monthKm), 0);
-            document.getElementById('summary-group-km').textContent = `${groupSum.toFixed(1).replace(/\.0$/, '')} km`;
-
-            const filtered = primaryRanking.filter(a => a.name.toLowerCase().includes(searchQuery));
-            const container = document.getElementById('ranking-container');
-
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 bg-slate-900/50 border border-slate-800 rounded-2xl text-xs text-slate-400">No se encontraron corredores.</div>`;
-                return;
-            }
-
-            container.innerHTML = filtered.map(athlete => {
-                const realPos = primaryRanking.findIndex(x => x.id === athlete.id) + 1;
-                const pct = Math.min(100, Math.round((athlete.monthKm / athlete.goalKm) * 100));
-                const isWinner = challengeWinner && challengeWinner.id === athlete.id;
-
-                const posStyle = realPos === 1 ? 'bg-amber-500 text-slate-950' : realPos === 2 ? 'bg-slate-300 text-slate-950' : realPos === 3 ? 'bg-amber-700 text-white' : 'bg-slate-800 text-slate-300';
-
-                return `
-                <div onclick="openAthleteModal('${athlete.id}')" class="bg-slate-900 hover:bg-slate-850 active:scale-[0.995] border ${athlete.completedMonth ? 'border-emerald-500/45' : 'border-slate-800'} rounded-2xl p-4 transition cursor-pointer shadow-sm">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <span class="w-7 h-7 rounded-xl ${posStyle} font-black text-xs flex items-center justify-center shrink-0">${realPos}</span>
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                    <h3 class="font-black text-white text-sm sm:text-base truncate">${escapeHtml(athlete.name)}</h3>
-                                    ${isWinner ? '<span class="text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full">👑 Líder Reto</span>' : ''}
-                                </div>
-                                <p class="text-[11px] text-slate-400 mt-0.5">Total acumulado: <strong class="text-slate-200">${athlete.totalKm} km</strong></p>
-                            </div>
-                        </div>
-                        <span class="inline-block bg-slate-950 border ${athlete.completedMonth ? 'border-emerald-500/50 text-emerald-300' : 'border-slate-700 text-slate-200'} px-2.5 py-1 rounded-xl text-xs font-black">
-                            Nivel ${athlete.levelInMonth}
-                        </span>
-                    </div>
-                    <div class="mt-3">
-                        <div class="flex items-center justify-between text-[11px] sm:text-xs mb-1.5 gap-2">
-                            <div>${athlete.completedMonth ? '<span class="text-emerald-400 font-extrabold">✅ OBJETIVO CUMPLIDO</span>' : `<span class="text-slate-400">Faltan <strong class="text-slate-200">${Math.max(0, athlete.goalKm - athlete.monthKm).toFixed(1).replace(/\.0$/, '')} km</strong></span>`}</div>
-                            <span class="font-extrabold text-white shrink-0">${athlete.monthKm} / ${athlete.goalKm} km</span>
-                        </div>
-                        <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                            <div class="h-full ${athlete.completedMonth ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-emerald-600'} rounded-full transition-all duration-500" style="width: ${pct}%"></div>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function renderAthleteControls() {
-            const select = document.getElementById('select-athlete');
-            const prev = select.value;
-            const sorted = [...state.athletes].sort((a, b) => a.name.localeCompare(b.name));
-            select.innerHTML = `<option value="">-- Selecciona un corredor (${sorted.length}) --</option>` +
-                sorted.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
-            if (prev && sorted.some(a => a.id === prev)) select.value = prev;
-            syncChipsHighlight();
-        }
-
-        function syncChipsHighlight() {
-            const container = document.getElementById('athlete-chips');
-            const selectedId = document.getElementById('select-athlete').value;
-            container.innerHTML = [...state.athletes].sort((a, b) => a.name.localeCompare(b.name)).map(a => {
-                const active = a.id === selectedId;
-                return `<button type="button" onclick="selectAthleteChip('${a.id}')" class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition ${active ? 'bg-emerald-600 border-emerald-400 text-white' : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600'}">${escapeHtml(a.name)}</button>`;
-            }).join('');
-        }
-
-        function renderRecentWorkouts() {
-            const container = document.getElementById('recent-workouts-container');
-            const list = [...state.workouts].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)).slice(0, 8);
-            if (list.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-3">Sin registros todavía.</p>`;
-                return;
-            }
-            container.innerHTML = list.map(w => {
-                const ath = state.athletes.find(a => a.id === w.athleteId);
-                return `
-                <div class="flex items-center justify-between bg-slate-950 border border-slate-800/80 px-3.5 py-2.5 rounded-xl text-xs">
-                    <div class="min-w-0 pr-2">
-                        <strong class="text-white font-extrabold truncate">${escapeHtml(ath ? ath.name : '')}</strong>
-                        <span class="text-slate-400 ml-2">${w.date}</span>
-                    </div>
-                    <div class="flex items-center gap-3 shrink-0">
-                        <span class="font-black text-emerald-400 text-sm">${w.km} km</span>
-                        <button onclick="deleteWorkoutById('${w.id}')" class="text-slate-500 hover:text-rose-400 p-1 font-bold">✕</button>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function openAthleteModal(id) {
-            const athlete = state.athletes.find(a => a.id === id);
-            if (!athlete) return;
-            modalAthleteId = id;
-            const info = evaluateAthlete(athlete, selectedMonth);
-            document.getElementById('modal-name').textContent = athlete.name;
-            document.getElementById('modal-sub').textContent = `Nivel actual: ${info.nextOrCurrentLevel} • Total: ${info.totalKm} km`;
-            document.getElementById('modal-base-level').textContent = info.baseLevel;
-            document.getElementById('modal-workouts').innerHTML = info.workouts.length === 0 ? `<p class="text-xs text-slate-400 text-center py-6">Sin entrenos.</p>` : info.workouts.map(w => `
-                <div class="flex items-center justify-between bg-slate-950 border border-slate-800 px-3.5 py-2.5 rounded-xl">
-                    <span class="text-xs font-bold text-slate-200">${w.date}</span>
-                    <div class="flex items-center gap-3">
-                        <span class="font-black text-sm text-emerald-400">${w.km} km</span>
-                        <button onclick="deleteWorkoutById('${w.id}')" class="w-8 h-8 rounded-lg bg-rose-950/50 text-rose-400 flex items-center justify-center text-xs font-bold">🗑️</button>
-                    </div>
-                </div>`).join('');
-            document.getElementById('athlete-modal').classList.remove('hidden');
-            document.getElementById('athlete-modal').classList.add('flex');
-        }
-
-        function closeAthleteModal() {
-            modalAthleteId = null;
-            document.getElementById('athlete-modal').classList.add('hidden');
-            document.getElementById('athlete-modal').classList.remove('flex');
-        }
-
-        function changeAthleteBaseLevel(delta) {
-            if (!modalAthleteId) return;
-            const athlete = state.athletes.find(a => a.id === modalAthleteId);
-            if (!athlete) return;
-            athlete.baseLevel = Math.max(1, (athlete.baseLevel || 1) + delta);
-            persistData();
-            renderAll();
-            openAthleteModal(modalAthleteId);
-        }
-
-        function buildWhatsAppReport() {
-            const { primaryRanking, challengeWinner } = computeStandings();
-            const showPassedSection = document.getElementById('wa-opt-passed').checked;
-            const monthTitle = formatLongMonth(selectedMonth).toUpperCase();
-
-            let msg = `🏃‍♂️ *MACHIYARD TEMPRANILLA* 🏃‍♀️\n📅 *CLASIFICACIÓN - ${monthTitle}*\n━━━━━━━━━━━━━━━━━━━━\n\n`;
-            if (challengeWinner) msg += `🏆 *LÍDER DEL RETO:* ${challengeWinner.name} (Nivel ${challengeWinner.nextOrCurrentLevel})\n\n`;
-
-            const completedList = primaryRanking.filter(a => a.completedMonth);
-            if (showPassedSection && completedList.length > 0) {
-                msg += `✅ *OBJETIVO CUMPLIDO (SUBEN DE NIVEL)*\n`;
-                completedList.forEach(a => { msg += `🚀 *${a.name}* (${a.monthKm} km) → Sube a *Nivel ${a.nextOrCurrentLevel}*\n`; });
-                msg += `\n`;
-            }
-
-            msg += `📊 *TABLA GENERAL (${primaryRanking.length} CORREDORES)*\n`;
-            primaryRanking.forEach((a, idx) => {
-                const pos = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
-                const icon = a.completedMonth ? '✅' : '⏳';
-                msg += `${pos} *${a.name}* — *${a.monthKm}/${a.goalKm} km* ${icon} _(Global: ${a.totalKm} km)_\n`;
-            });
-
-            document.getElementById('wa-textarea').value = msg;
-        }
-
-        function copyWhatsAppReport() {
-            const txt = document.getElementById('wa-textarea');
-            txt.select();
-            document.execCommand('copy');
-            showToast('Parte copiado al portapapeles', '📋');
-        }
-
-        function openInWhatsApp() {
-            const txt = encodeURIComponent(document.getElementById('wa-textarea').value);
-            window.open(`https://api.whatsapp.com/send?text=${txt}`, '_blank');
-        }
-
-        function showToast(msg, icon = '✅', isError = false) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').textContent = msg;
-            document.getElementById('toast-icon').textContent = icon;
-            toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md pointer-events-none transition-all duration-300 opacity-100 translate-y-0';
-            setTimeout(() => {
-                toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-md pointer-events-none transition-all duration-300 opacity-0 -translate-y-4';
-            }, 3000);
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-    </script>
+    document.getElementById('workoutDate').value = new Date().toISOString().slice(0, 10);
+    setAdminState(adminPin);
+    loadCloudData();
+    subscribeRealtime();
+  </script>
 </body>
 </html>
